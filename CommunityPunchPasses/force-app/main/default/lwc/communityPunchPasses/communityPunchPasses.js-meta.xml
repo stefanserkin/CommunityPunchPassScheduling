@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<LightningComponentBundle xmlns="http://soap.sforce.com/2006/04/metadata">
+    <apiVersion>52.0</apiVersion>
+    <isExposed>true</isExposed>
+    <masterLabel>Community Punch Passes</masterLabel>
+    <targets>
+        <target>lightningCommunity__Default</target>
+        <target>lightningCommunity__Page</target>
+    </targets>
+    <targetConfigs>
+        <targetConfig targets="lightningCommunity__Default">
+            <property 
+                name="cardIcon" 
+                type="String"
+                label="SLDS Icon Name" 
+                default="custom:custom95"
+                description="Use icon names in the SLDS library"
+                required="true"
+            />
+            <property 
+                name="membershipCategoryNames" 
+                type="String" 
+                label="Membership Categories to Display"
+                default="Private Lessons"
+                description="Enter Membership Category Names to display, separated by commas"
+                required="true"
+            />
+            <property 
+                name="packageReferenceNameSingular" 
+                type="String" 
+                label="Package Reference Name (Singular)"
+                default="Punch Pass"
+                required="true"
+            />
+            <property 
+                name="packageReferenceNamePlural" 
+                type="String" 
+                label="Package Reference Name (Plural)"
+                default="Punch Passes"
+                required="true"
+            />
+            <property 
+                name="showExternalSystemButton" 
+                type="Boolean" 
+                label="Show Button to External System" 
+            />
+            <property 
+                name="externalSystemButtonLabel" 
+                type="String" 
+                label="External System Button Label" 
+                default="Schedule Appointments" 
+            />
+            <property 
+                name="externalSystemUrl" 
+                type="String" 
+                label="External System URL" 
+                placeholder="https://www.mindbodyonline.com/explore" 
+            />
+            <property 
+                name="openExternalSystemUrlInNewTab" 
+                type="Boolean" 
+                label="Open External System in New Tab/Window"
+            />
+            <property 
+                name="showScheduleAppointmentAction" 
+                type="Boolean" 
+                label="Show Schedule Appointment Row Action"
+                description="If selecting this option, must include a Schedule Appointment Action URL"
+            />
+            <property 
+                name="scheduleAppointmentUrl" 
+                type="String" 
+                label="Schedule Appointment Action URL"
+                description="The API Name of the field on the Membership object with the target URL"
+            />
+        </targetConfig>
+    </targetConfigs>
+</LightningComponentBundle>

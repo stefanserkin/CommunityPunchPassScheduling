@@ -1,0 +1,62 @@
+<!-- sldsValidatorIgnore -->
+<template>
+
+	<!-- LIGHTNING SPINNER ON LOAD -->
+	<template if:true={isLoading}>
+		<lightning-spinner alternative-text="Loading" size="medium"></lightning-spinner>
+	</template>
+	
+	<!-- VIEW APPLICATION MODAL -->
+    <template if:true={showModal}>
+        <c-application-enrollment-manager-modal
+            modal-header={modalHeader}
+			app={selectedApp}
+            answered-questions={answeredQuestions} 
+			aqcols={aqcols}
+            onclose={handleModalClose}
+			onreject={handleModalReject}
+			onoffer={handleModalOffer}
+        ></c-application-enrollment-manager-modal>
+    </template>
+
+	<lightning-card title={cardTitle} icon-name={cardIcon}>
+		<!-- REFRESH COMPONENT -->
+		<lightning-button-icon 
+			slot="actions" 
+			icon-name="utility:refresh"  
+			alternative-text="Refresh Component" 
+			title="Refresh"
+			onclick={refreshComponent}
+		><label></label>
+		</lightning-button-icon>
+		<!-- TABSET -->
+		<lightning-tabset variant="vertical" active-tab-value="0">
+			<template for:each={tabs} for:item="tab">
+				<lightning-tab label={tab.label} key={tab.value} value={tab.value} onactive={handleActiveTab}>
+					<h2 class="slds-text-heading_small slds-var-m-around_x-small slds-align_absolute-center">
+						{tab.header}
+					</h2>
+
+					<template if:false={apps}>
+						<p class="slds-var-m-around_x-small">No applications found</p>
+					</template>
+					
+					<template if:true={apps}>
+						<!-- DATATABLE -->
+						<div style="height: 500px;">
+							<lightning-datatable
+								key-field="Id"
+								data={apps}
+								columns={cols}
+								onrowaction={handleRowAction}
+								hide-checkbox-column
+								show-row-number-column
+							></lightning-datatable>
+						</div>
+					</template>	
+
+				</lightning-tab>
+			</template>
+		</lightning-tabset>
+	</lightning-card>
+</template>
