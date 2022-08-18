@@ -8,19 +8,49 @@ public without sharing class CommunityPunchPassesController {
     private static String userTimeZone = String.valueOf(UserInfo.getTimeZone());
 
     @AuraEnabled(cacheable=true)
+    public static List<StaffAvailabilityWrapper> getAssignedStaffAvailability(
+        String membershipTypeId, 
+        String locationId
+    ) {
+        // Create list of wrappers
+        List<StaffAvailabilityWrapper> lstWrappers = new List<StaffAvailabilityWrapper>();
+
+        // Query for staff with upcoming availability and appts
+        List<TREX1__Staff__c> lstStaff = getAssignedStaff(
+            membershipTypeId, 
+            locationId
+        );
+
+        // Remove appointments from available times and
+        // return wrapper of staff with availability
+        for (TREX1__Staff__c staff : lstStaff) {
+            StaffAvailabilityWrapper saw = new StaffAvailabilityWrapper();
+            saw = CommunityPunchPassesHelper.getWrapperFromStaff(staff);
+            lstWrappers.add(saw);
+        }
+
+        return lstWrappers;
+
+    }
+
+    @AuraEnabled(cacheable=true)
     public static List<TREX1__Staff__c> getAssignedStaff(
-        String membershipTypeId
+        String membershipTypeId, 
+        String locationId
     ) {
         List<TREX1__Staff__c> lstStaff = [
             SELECT Id, Name, 
                    (SELECT Id, Name, Date__c, 
                            Start_Time__c, End_Time__c, 
                            Start_Time_2__c, End_Time_2__c 
-                      FROM Staff_Availability_Schedules__r),
+                      FROM Staff_Availability_Schedules__r
+                     WHERE Date__c >= TODAY
+                       AND Location__c = :locationId),
                    (SELECT Id, Name, Start_DateTime__c, End_DateTime__c 
-                      FROM Scheduled_Appointments__r
+                      FROM Appointments__r
                      WHERE Start_DateTime__c >= TODAY
-                       AND Status__c NOT IN ('Draft','Cancelled'))
+                       AND Status__c NOT IN ('Draft','Cancelled')
+                     ORDER BY Start_DateTime__c)
               FROM TREX1__Staff__c 
              WHERE Id IN (SELECT Staff__c 
                             FROM Assigned_Staff__c 
@@ -81,11 +111,11 @@ public without sharing class CommunityPunchPassesController {
         String strRowTargetUrlField
     ) {
         List<Contact> lstContacts = new List<Contact>();
-        List<String> lstMembershipCategoryNames = getListOfCategoriesFromString(
+        List<String> lstMembershipCategoryNames = CommunityPunchPassesHelper.getListOfCategoriesFromString(
             strMembershipCategoryNames
         );
         String strQuery = 'SELECT Id, FirstName, LastName, ';
-        strQuery += '(SELECT Id, Name, TREX1__Contact__c, TREX1__Contact__r.Name, TREX1__Contact__r.FirstName, TREX1__memb_Type__c, TREX1__memb_Type__r.Name, TREX1__Type__c, TREX1__Category_Name__c, TREX1__Status__c, TREX1__Account__r.Name, TREX1__Start_Date__c, TREX1__End_Date__c, TREX1__Purchasing_Transaction__c, TREX1__Remaining_Value__c, TREX1__Stored_Value__c, TREX1__Total_Value__c, CreatedDate';
+        strQuery += '(SELECT Id, Name, TREX1__Contact__c, TREX1__Contact__r.Name, TREX1__Contact__r.FirstName, TREX1__memb_Type__c, TREX1__memb_Type__r.Name, TREX1__Type__c, TREX1__memb_Type__r.TREX1__Location__c, TREX1__Category_Name__c, TREX1__Status__c, TREX1__Account__r.Name, TREX1__Start_Date__c, TREX1__End_Date__c, TREX1__Purchasing_Transaction__c, TREX1__Remaining_Value__c, TREX1__Stored_Value__c, TREX1__Total_Value__c, CreatedDate';
         if (!String.isBlank(strRowTargetUrlField)) {
             strQuery += ', ' + String.escapeSingleQuotes(strRowTargetUrlField) + ' ';
         }
