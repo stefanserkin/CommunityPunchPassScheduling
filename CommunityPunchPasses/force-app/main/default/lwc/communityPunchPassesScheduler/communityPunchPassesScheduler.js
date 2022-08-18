@@ -8,13 +8,14 @@ export default class CommunityPunchPassesScheduler extends LightningElement {
     isLoading = false;
     error;
 
-    showSelectInstructor = true;
-    showInstructorSchedule = false;
+    showSelectStaff = true;
+    showStaffSchedule = false;
 
     wiredStaff = [];
     lstStaff;
 
     selectedStaff;
+    selectedAvailability;
 
     @wire(getAssignedStaffAvailability, { 
 		membershipTypeId: '$membershipTypeId', 
@@ -25,7 +26,6 @@ export default class CommunityPunchPassesScheduler extends LightningElement {
 	
         if (result.data) {
 			let rows = JSON.parse( JSON.stringify(result.data) );
-			console.table(rows);
             const options = {
                 year: 'numeric', month: 'numeric', day: 'numeric', 
                 hour: 'numeric', minute: 'numeric', second: 'numeric', 
@@ -55,9 +55,14 @@ export default class CommunityPunchPassesScheduler extends LightningElement {
     }
 
     openStaffSchedule(event) {
-        const staffData = event.target.dataset;
-        this.selectedStaff = staffData.name;
-        alert('Okay! A schedule for ' + this.selectedStaff + ' coming right up...');
+        this.selectedStaff = this.lstStaff.find(staff => staff.staffId === event.target.dataset.recordId);
+        this.showSelectStaff = false;
+        this.showStaffSchedule = true;
+    }
+
+    goBackToSelectStaff() {
+        this.showStaffSchedule = false;
+        this.showSelectStaff = true;
     }
 
     handleCloseEvent() {

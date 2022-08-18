@@ -15,40 +15,65 @@
                 </h2>
             </header>
 
-            <!-- SELECT INSTRUCTOR -->
-            <template if:true={showSelectInstructor}>
-                <div class="slds-modal__content slds-var-p-around_medium" id="modal-content-id-1">
+            <div class="slds-modal__content slds-var-p-around_medium" id="modal-content-id-1">
+                
+                <!-- SELECT STAFF -->
+                <template if:true={showSelectStaff}>
                     <p class="slds-text-heading_small slds-var-m-around_medium">
                         Select an instructor
                     </p>
                     <template if:true={lstStaff}>
-                        <ul class="slds-list_dotted slds-var-m-around_medium">
+                        <!--<ul class="slds-list_dotted slds-var-m-around_medium">-->
                             <template for:each={lstStaff} for:item="staff">
+                                <p key={staff.staffId} class="slds-m-bottom_medium">
+                                    <lightning-button 
+                                        variant="neutral" 
+                                        label={staff.staffName}
+                                        title="Go Back" 
+                                        onclick={openStaffSchedule} 
+                                        data-record-id={staff.staffId} 
+                                        class="slds-m-left_x-small">
+                                    </lightning-button>
+                                </p>
+                                <!--
                                 <li key={staff.staffId} 
                                     class="slds-var-m-around_small" 
-                                    onclick={openStaffSchedule}
-                                    data-name={staff.staffName}
+                                    onclick={openStaffSchedule} 
+                                    data-record-id={staff.staffId} 
                                 >
                                     {staff.staffName}<br/>
-                                    <template 
-                                        for:each={staff.availabilitySlots} 
-                                        for:item="slot"
-                                    >
-                                        <li key={slot.Id} class="slds-var-m-around_small">
-                                            {slot.startTime} - {slot.endTime}
-                                            <!--
-                                            <lightning-formatted-date-time value={slot.startTime}></lightning-formatted-date-time>
-                                            <lightning-formatted-date-time value={slot.endTime}></lightning-formatted-date-time>
-                                            -->
-                                        </li>
+                                </li>
+                                -->
+                            </template>
+                        <!--</ul>-->
+                    </template>
+                </template>
+            
 
-                                    </template>
+                <!-- STAFF SCHEDULE -->
+                <template if:true={showStaffSchedule}>
+                    <lightning-button 
+                        variant="base" 
+                        label="Back" 
+                        title="Go Back" 
+                        onclick={goBackToSelectStaff} 
+                        class="slds-m-left_x-small">
+                    </lightning-button>
+                    <template if:true={selectedStaff.availabilitySlots}>
+                        <p class="slds-text-heading_small slds-var-m-around_medium">
+                            Select from available times
+                        </p>
+                        <ul class="slds-list_dotted slds-var-m-around_medium">
+                            <template for:each={selectedStaff.availabilitySlots} for:item="slot">
+                                <li key={slot.startTime}>
+                                    {slot.startTime} - {slot.endTime}
                                 </li>
                             </template>
                         </ul>
                     </template>
-                </div>
-            </template>
+                </template>
+                
+            </div>
 
             <footer class="slds-modal__footer">
                 <template if:true={showCancel}>
