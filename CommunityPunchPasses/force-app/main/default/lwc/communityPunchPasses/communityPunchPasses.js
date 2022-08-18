@@ -96,6 +96,7 @@ export default class CommunityPunchPasses extends NavigationMixin(LightningEleme
 
 	selectedPunchPass;
 	selectedMembershipTypeId;
+	selectedLocationId;
 	selectedReceiptId = '';
 
 	get noPunchPassActivityDescription() {
@@ -270,6 +271,8 @@ export default class CommunityPunchPasses extends NavigationMixin(LightningEleme
 		console.log('entered schedule appointment with memtypeid : ' + row.TREX1__memb_Type__c);
 		this.selectedPunchPass = row;
 		this.selectedMembershipTypeId = row.TREX1__memb_Type__c;
+		this.selectedLocationId = row.TREX1__memb_Type__r.TREX1__Location__c;
+		console.log(':::: chosen location id is ' + this.selectedLocationId);
 		this.showScheduler = true;
 	}
 

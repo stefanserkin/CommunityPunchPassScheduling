@@ -2,8 +2,8 @@
 	<!-- DECREMENT DETAIL MODAL -->
     <template if:true={showModal}>
         <c-community-punch-passes-modal
-            modal-header={modalHeader}
-			punch-pass={selectedPunchPass}
+            modal-header={modalHeader} 
+			punch-pass={selectedPunchPass} 
             decrements={decrements} 
             oncancel={handleModalClose} 
             onokay={handleModalClose} 
@@ -14,8 +14,9 @@
 	<!-- SCHEDULER -->
     <template if:true={showScheduler}>
         <c-community-punch-passes-scheduler
-			punch-pass={selectedPunchPass}
-			membership-type-id={selectedMembershipTypeId}
+			punch-pass={selectedPunchPass} 
+			membership-type-id={selectedMembershipTypeId} 
+			location-id={selectedLocationId} 
             oncancel={handleModalClose} 
             onokay={handleModalClose} 
             onclose={handleModalClose}

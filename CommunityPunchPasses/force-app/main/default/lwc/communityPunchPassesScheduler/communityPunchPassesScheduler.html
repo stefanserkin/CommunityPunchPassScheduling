@@ -24,12 +24,25 @@
                     <template if:true={lstStaff}>
                         <ul class="slds-list_dotted slds-var-m-around_medium">
                             <template for:each={lstStaff} for:item="staff">
-                                <li key={staff.Id} 
+                                <li key={staff.staffId} 
                                     class="slds-var-m-around_small" 
                                     onclick={openStaffSchedule}
-                                    data-name={staff.Name}
+                                    data-name={staff.staffName}
                                 >
-                                    {staff.Name}
+                                    {staff.staffName}<br/>
+                                    <template 
+                                        for:each={staff.availabilitySlots} 
+                                        for:item="slot"
+                                    >
+                                        <li key={slot.Id} class="slds-var-m-around_small">
+                                            {slot.startTime} - {slot.endTime}
+                                            <!--
+                                            <lightning-formatted-date-time value={slot.startTime}></lightning-formatted-date-time>
+                                            <lightning-formatted-date-time value={slot.endTime}></lightning-formatted-date-time>
+                                            -->
+                                        </li>
+
+                                    </template>
                                 </li>
                             </template>
                         </ul>

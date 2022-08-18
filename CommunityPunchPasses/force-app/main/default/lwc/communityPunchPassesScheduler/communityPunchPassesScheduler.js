@@ -1,21 +1,24 @@
 import { LightningElement, api, wire } from 'lwc';
-import getAssignedStaff from '@salesforce/apex/CommunityPunchPassesController.getAssignedStaff';
+import getAssignedStaffAvailability from '@salesforce/apex/CommunityPunchPassesController.getAssignedStaffAvailability';
 
 export default class CommunityPunchPassesScheduler extends LightningElement {
     @api punchPass;
     @api membershipTypeId;
+    @api locationId;
     isLoading = false;
     error;
 
-    showSelectInstructor = false;
+    showSelectInstructor = true;
+    showInstructorSchedule = false;
 
     wiredStaff = [];
     lstStaff;
 
     selectedStaff;
 
-    @wire(getAssignedStaff, { 
-		membershipTypeId: '$membershipTypeId'
+    @wire(getAssignedStaffAvailability, { 
+		membershipTypeId: '$membershipTypeId', 
+        locationId: '$locationId'
 	}) wiredStaffMembers(result) {
 		this.isLoading = true;
 		this.wiredStaff = result;
@@ -23,6 +26,23 @@ export default class CommunityPunchPassesScheduler extends LightningElement {
         if (result.data) {
 			let rows = JSON.parse( JSON.stringify(result.data) );
 			console.table(rows);
+            const options = {
+                year: 'numeric', month: 'numeric', day: 'numeric', 
+                hour: 'numeric', minute: 'numeric', second: 'numeric', 
+                hour12: true
+            };
+            rows.forEach(dataParse => {
+				dataParse.availabilitySlots.forEach(slot => {
+                    if (slot.startTime) {
+                        let dt = new Date( slot.startTime );
+                        slot.startTime = new Intl.DateTimeFormat('en-US', options).format(dt);
+                    }
+                    if (slot.endTime) {
+                        let dt = new Date( slot.endTime );
+                        slot.endTime = new Intl.DateTimeFormat('en-US', options).format(dt);
+                    }
+                })
+			});
             this.lstStaff = rows;
             this.error = undefined;
 			this.isLoading = false;
