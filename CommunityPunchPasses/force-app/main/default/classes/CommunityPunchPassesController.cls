@@ -10,7 +10,8 @@ public without sharing class CommunityPunchPassesController {
     @AuraEnabled(cacheable=true)
     public static List<StaffAvailabilityWrapper> getAssignedStaffAvailability(
         String membershipTypeId, 
-        String locationId
+        String locationId, 
+        Integer appointmentLength
     ) {
         // Create list of wrappers
         List<StaffAvailabilityWrapper> lstWrappers = new List<StaffAvailabilityWrapper>();
@@ -25,7 +26,10 @@ public without sharing class CommunityPunchPassesController {
         // return wrapper of staff with availability
         for (TREX1__Staff__c staff : lstStaff) {
             StaffAvailabilityWrapper saw = new StaffAvailabilityWrapper();
-            saw = CommunityPunchPassesHelper.getWrapperFromStaff(staff);
+            saw = StaffAvailabilityWrapperService.getWrapperFromStaff(
+                staff, 
+                appointmentLength
+            );
             lstWrappers.add(saw);
         }
 
@@ -115,7 +119,7 @@ public without sharing class CommunityPunchPassesController {
             strMembershipCategoryNames
         );
         String strQuery = 'SELECT Id, FirstName, LastName, ';
-        strQuery += '(SELECT Id, Name, TREX1__Contact__c, TREX1__Contact__r.Name, TREX1__Contact__r.FirstName, TREX1__memb_Type__c, TREX1__memb_Type__r.Name, TREX1__Type__c, TREX1__memb_Type__r.TREX1__Location__c, TREX1__memb_Type__r.Appointment_Length__c, TREX1__Category_Name__c, TREX1__Status__c, TREX1__Account__r.Name, TREX1__Start_Date__c, TREX1__End_Date__c, TREX1__Purchasing_Transaction__c, TREX1__Remaining_Value__c, TREX1__Stored_Value__c, TREX1__Total_Value__c, CreatedDate';
+        strQuery += '(SELECT Id, Name, TREX1__Contact__c, TREX1__Contact__r.Name, TREX1__Contact__r.FirstName, TREX1__memb_Type__c, TREX1__memb_Type__r.Name, TREX1__Type__c, TREX1__memb_Type__r.TREX1__Location__c, TREX1__memb_Type__r.Appointment_Length__c, TREX1__Category_Name__c, TREX1__Status__c, TREX1__Account__r.Name, TREX1__Start_Date__c, TREX1__End_Date__c, TREX1__Purchasing_Transaction__c, TREX1__Remaining_Value__c, TREX1__Stored_Value__c, TREX1__Total_Value__c, Effectively_Used_Credits__c, CreatedDate';
         if (!String.isBlank(strRowTargetUrlField)) {
             strQuery += ', ' + String.escapeSingleQuotes(strRowTargetUrlField) + ' ';
         }
@@ -170,22 +174,5 @@ public without sharing class CommunityPunchPassesController {
              LIMIT 10000
         ];
     }
-
-    /*
-    private static List<String> getListOfCategoriesFromString(
-        String strMembershipCategoryNames
-    ) {
-        List<String> lstFormattedCategoryNames = new List<String>();
-        List<String> lstMembershipCategoryNames =
-            strMembershipCategoryNames != null ?
-            strMembershipCategoryNames.split(',') :
-            new List<String>();
-        for (String catName : lstMembershipCategoryNames) {
-            catName = catName.trim();
-            lstFormattedCategoryNames.add(catName);
-        }
-        return lstFormattedCategoryNames;
-    }
-*/
 
 }
