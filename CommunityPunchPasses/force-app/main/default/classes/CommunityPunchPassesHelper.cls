@@ -33,6 +33,7 @@ public inherited sharing class CommunityPunchPassesHelper {
 
         for (Staff_Availability_Schedule__c sas : staff.Staff_Availability_Schedules__r) {
 
+            // Establish min/max for the daily schedule
             Datetime dtScheduleStart = Datetime.newInstance(
                 sas.Date__c, sas.Start_Time__c
             );
@@ -103,7 +104,6 @@ public inherited sharing class CommunityPunchPassesHelper {
                 previousApptDate == Date.valueOf(appt.Start_DateTime__c)
             ) {
                 lstDailyAppts.add(appt);
-                System.debug('added appt to list');
             } else {
                 mapDateToAppts.put(previousApptDate, lstDailyAppts);
                 lstDailyAppts.clear();
@@ -111,7 +111,6 @@ public inherited sharing class CommunityPunchPassesHelper {
             }
 
             previousApptDate = Date.valueOf(appt.Start_DateTime__c);
-            System.debug(':::::::::: previous date: ' + previousApptDate);
 
             // If the last in the list, add list to map
             if (i == staff.Appointments__r.size() - 1) {

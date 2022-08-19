@@ -193,7 +193,7 @@ private class CommunityPunchPassesController_Test {
         );
         
         System.assertEquals(
-            'Complete', 
+            STATUS_COMPLETE, 
             lstCtsWithCompletedMems.get(0).TREX1__Memberships__r.get(0).TREX1__Status__c, 
             'Status should be complete'
         );
