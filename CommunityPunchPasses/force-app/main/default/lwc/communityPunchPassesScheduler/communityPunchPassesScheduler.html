@@ -16,36 +16,32 @@
             </header>
 
             <div class="slds-modal__content slds-var-p-around_medium" id="modal-content-id-1">
+
+                <!-- SPINNER ON LOAD -->
+                <lightning-spinner 
+                    if:true={isLoading} 
+                    alternative-text="Loading" 
+                    variant="brand" 
+                    size="medium"
+                ></lightning-spinner>
                 
                 <!-- SELECT STAFF -->
                 <template if:true={showSelectStaff}>
-                    <p class="slds-text-heading_small slds-var-m-around_medium">
+                    <p class="slds-text-heading_small slds-var-m-around_medium slds-align_absolute-center">
                         Select an instructor
                     </p>
                     <template if:true={lstStaff}>
-                        <!--<ul class="slds-list_dotted slds-var-m-around_medium">-->
-                            <template for:each={lstStaff} for:item="staff">
-                                <p key={staff.staffId} class="slds-m-bottom_medium">
-                                    <lightning-button 
-                                        variant="neutral" 
-                                        label={staff.staffName}
-                                        title="Go Back" 
-                                        onclick={openStaffSchedule} 
-                                        data-record-id={staff.staffId} 
-                                        class="slds-m-left_x-small">
-                                    </lightning-button>
-                                </p>
-                                <!--
-                                <li key={staff.staffId} 
-                                    class="slds-var-m-around_small" 
+                        <template for:each={lstStaff} for:item="staff">
+                            <p key={staff.staffId} class="slds-m-bottom_medium">
+                                <button 
                                     onclick={openStaffSchedule} 
                                     data-record-id={staff.staffId} 
+                                    class="slds-button slds-button_brand slds-button_stretch"
                                 >
-                                    {staff.staffName}<br/>
-                                </li>
-                                -->
-                            </template>
-                        <!--</ul>-->
+                                    {staff.staffName}
+                                </button>
+                            </p>
+                        </template>
                     </template>
                 </template>
             
@@ -53,36 +49,39 @@
                 <!-- STAFF SCHEDULE -->
                 <template if:true={showStaffSchedule}>
                     <lightning-button 
-                        variant="base" 
+                        variant="neutral" 
                         label="Back" 
                         title="Go Back" 
+                        icon-name="utility:back" 
                         onclick={goBackToSelectStaff} 
                         class="slds-m-left_x-small">
                     </lightning-button>
                     <template if:true={selectedStaff.availabilitySlots}>
-                        <p class="slds-text-heading_small slds-var-m-around_medium">
+                        <p class="slds-text-heading_small slds-var-m-around_medium slds-align_absolute-center">
                             Select from available times
                         </p>
-                        <ul class="slds-list_dotted slds-var-m-around_medium">
-                            <template for:each={selectedStaff.availabilitySlots} for:item="slot">
-                                <li key={slot.startTime}>
-                                    {slot.startTime} - {slot.endTime}
-                                </li>
-                            </template>
-                        </ul>
+                        <template for:each={selectedStaff.availabilitySlots} for:item="slot">
+                            <p key={slot.startTime} class="slds-m-bottom_medium">
+                                <button 
+                                    onclick={bookAppointment} 
+                                    data-start-time={slot.startTime} 
+                                    data-end-time={slot.endTime} 
+                                    class="slds-button slds-button_brand slds-button_stretch"
+                                >
+                                    {slot.formattedStartTime} - {slot.formattedEndTime} 
+                                </button>
+                            </p>
+                        </template>
                     </template>
                 </template>
                 
             </div>
 
+            <!--
             <footer class="slds-modal__footer">
-                <template if:true={showCancel}>
-                    <button class="slds-button slds-button_neutral" onclick={handleCancelEvent} title="Cancel">Cancel</button>
-                </template>
-                <template if:true={showOkay}>
-                    <button class="slds-button slds-button_brand" onclick={handleOkayEvent} title="OK">OK</button>
-                </template>
+                <button class="slds-button slds-button_neutral" onclick={handleCancelEvent} title="Cancel">Back</button>
             </footer>
+            -->
         </div>
     </section>
     <div class="slds-backdrop slds-backdrop_open"></div>

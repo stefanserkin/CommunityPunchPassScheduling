@@ -188,6 +188,7 @@ export default class CommunityPunchPasses extends NavigationMixin(LightningEleme
 				dataParse.sectionLabel = label;
 				dataParse.TREX1__Memberships__r.forEach(element => {
 					element.showScheduleAppointmentAction = this.showScheduleAppointmentAction;
+					element.duration = element.TREX1__memb_Type__r.Appointment_Length__c;
 				});
 				this.numHouseholdActivePunchPasses += dataParse.numActivePunchPasses;
 			}); 
@@ -322,7 +323,12 @@ export default class CommunityPunchPasses extends NavigationMixin(LightningEleme
 
 	handleModalClose() {
         this.showModal = false;
-		this.showScheduler = false;
+		if (this.showScheduler) {
+			this.showScheduler = false;
+			this.isLoading = true;
+			this.refreshComponent();
+			this.isLoading = false;
+		}
     }
 
 	get targetBehavior() {
