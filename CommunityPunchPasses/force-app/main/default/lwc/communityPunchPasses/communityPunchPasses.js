@@ -19,7 +19,7 @@ export default class CommunityPunchPasses extends NavigationMixin(LightningEleme
         super();
         this.cols = [
 			{ label: 'Package', fieldName: 'TREX1__Type__c', type: 'text', hideDefaultActions: true },
-			{ label: 'Used', fieldName: 'TREX1__Total_Value__c', type: 'number', fixedWidth: 144, hideDefaultActions: true,
+			{ label: 'Used', fieldName: 'Effectively_Used_Credits__c', type: 'number', fixedWidth: 144, hideDefaultActions: true,
 				cellAttributes: { 
 					alignment: 'left' 
 				}
@@ -97,6 +97,7 @@ export default class CommunityPunchPasses extends NavigationMixin(LightningEleme
 	selectedPunchPass;
 	selectedMembershipTypeId;
 	selectedLocationId;
+	selectedAppointmentLength;
 	selectedReceiptId = '';
 
 	get noPunchPassActivityDescription() {
@@ -173,7 +174,6 @@ export default class CommunityPunchPasses extends NavigationMixin(LightningEleme
 	
         if (result.data) {
 			let rows = JSON.parse( JSON.stringify(result.data) );
-			console.log(rows);
 			rows.forEach(dataParse => {
 				let label = '';
 				dataParse.fullName = dataParse.FirstName + ' ' + dataParse.LastName;
@@ -187,12 +187,18 @@ export default class CommunityPunchPasses extends NavigationMixin(LightningEleme
 					' Active ' + this.packageReferenceNamePlural;
 				dataParse.sectionLabel = label;
 				dataParse.TREX1__Memberships__r.forEach(element => {
-					element.showScheduleAppointmentAction = this.showScheduleAppointmentAction;
+					if (
+						this.showScheduleAppointmentAction && 
+						element.TREX1__Stored_Value__c > element.Effectively_Used_Credits__c
+					) {
+						element.showScheduleAppointmentAction = true;
+					} else {
+						element.showScheduleAppointmentAction = false;
+					}
 					element.duration = element.TREX1__memb_Type__r.Appointment_Length__c;
 				});
 				this.numHouseholdActivePunchPasses += dataParse.numActivePunchPasses;
 			}); 
-			console.table(rows);
             this.contactsWithActivePunchPasses = rows;
             this.error = undefined;
 			this.isLoading = false;
@@ -252,28 +258,16 @@ export default class CommunityPunchPasses extends NavigationMixin(LightningEleme
                 break;
 			case 'schedule_appointment':
 				this.scheduleAppointment(row);
-
-			/*
-				this[NavigationMixin.GenerateUrl]({
-					type: 'standard__webPage',
-					attributes: {
-						url: row[this.scheduleAppointmentUrl]
-					}
-				}).then(generatedUrl => {
-					window.open(generatedUrl, this.targetBehavior);
-				});
-				*/
 				break;
             default:
         }
     }
 
 	scheduleAppointment(row) {
-		console.log('entered schedule appointment with memtypeid : ' + row.TREX1__memb_Type__c);
 		this.selectedPunchPass = row;
 		this.selectedMembershipTypeId = row.TREX1__memb_Type__c;
 		this.selectedLocationId = row.TREX1__memb_Type__r.TREX1__Location__c;
-		console.log(':::: chosen location id is ' + this.selectedLocationId);
+		this.selectedAppointmentLength = row.TREX1__memb_Type__r.Appointment_Length__c;
 		this.showScheduler = true;
 	}
 

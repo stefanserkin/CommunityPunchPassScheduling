@@ -16,6 +16,7 @@ export default class CommunityPunchPassesScheduler extends LightningElement {
     @api punchPass;
     @api membershipTypeId;
     @api locationId;
+    @api appointmentLength;
     isLoading = false;
     error;
 
@@ -26,7 +27,6 @@ export default class CommunityPunchPassesScheduler extends LightningElement {
     lstStaff;
 
     selectedStaff;
-    selectedAvailability;
 
     appointmentStart;
     appointmentEnd;
@@ -34,7 +34,8 @@ export default class CommunityPunchPassesScheduler extends LightningElement {
 
     @wire(getAssignedStaffAvailability, { 
 		membershipTypeId: '$membershipTypeId', 
-        locationId: '$locationId'
+        locationId: '$locationId', 
+        appointmentLength: '$appointmentLength'
 	}) wiredStaffMembers(result) {
 		this.isLoading = true;
 		this.wiredStaff = result;
@@ -68,7 +69,6 @@ export default class CommunityPunchPassesScheduler extends LightningElement {
 			this.isLoading = false;
         }
     }
-
 
     bookAppointment(event) {
         this.isLoading = true;
