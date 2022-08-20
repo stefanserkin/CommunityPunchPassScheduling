@@ -7,6 +7,15 @@ public without sharing class CommunityPunchPassesController {
 
     private static String userTimeZone = String.valueOf(UserInfo.getTimeZone());
 
+    /**********************************
+     * Get list of staff with availability wrappers, based on the location and 
+     *   appointment length of a membership type
+     * @param String membership type id
+     * @param String location id
+     * @param Integer length of appointment in minutes
+     * @return List<StaffAvailabilityWrapper> list of staff with availability slots
+     ***********************************/
+
     @AuraEnabled(cacheable=true)
     public static List<StaffAvailabilityWrapper> getAssignedStaffAvailability(
         String membershipTypeId, 
@@ -37,6 +46,13 @@ public without sharing class CommunityPunchPassesController {
 
     }
 
+    /**********************************
+     * Query for assigned staff with upcoming availability and appointments
+     * @param String membership type id
+     * @param String location id
+     * @return List<TREX1__Staff__c> list of staff with availabiilty and appointments
+     ***********************************/
+
     @AuraEnabled(cacheable=true)
     public static List<TREX1__Staff__c> getAssignedStaff(
         String membershipTypeId, 
@@ -62,6 +78,13 @@ public without sharing class CommunityPunchPassesController {
         ];
         return lstStaff;
     }
+
+    /**********************************
+     * Query for pass decrements related to a given membership id
+     *   Returned as strings to pre-format results
+     * @param String membership type id
+     * @return String[] list of formatted dates and times of decrements
+     ***********************************/
 
     @AuraEnabled
     public static List<String> getPassDecrements(
@@ -93,6 +116,13 @@ public without sharing class CommunityPunchPassesController {
         return lstResults;
     }
 
+    /**********************************
+     * Query for receipt attachment id for a given transaction id
+     *   Returns only id to be merged into a content display url
+     * @param String transaction id
+     * @return String receipt attachment id
+     ***********************************/
+
     @AuraEnabled
     public static string getTransactionReceiptId(
         String transactionId
@@ -107,6 +137,16 @@ public without sharing class CommunityPunchPassesController {
         ];
         return receipt.Id;
     }
+
+    /**********************************
+     * Query for all contacts in the household with active punch pass memberships
+     *   Constructed dynamically to prevent exceptions if no target url field is defined
+     *   in the community component's design time attributes
+     * @param String account id
+     * @param String membership category names - comma-separated
+     * @param String target url field for schedule appointments row-level action
+     * @return Contact[] list of contacts with active punch pass memberships
+     ***********************************/
 
     @AuraEnabled(cacheable=true)
     public static List<Contact> getActivePunchPassesByContact(
@@ -137,6 +177,14 @@ public without sharing class CommunityPunchPassesController {
         return lstContacts;
 
     }
+
+    /**********************************
+     * Query for all contacts in the household with completed punch pass memberships
+     *   No need for dynamic query, since completed membership can't be scheduled
+     * @param String account id
+     * @param String membership category names - comma-separated
+     * @return Contact[] list of contacts with completed punch pass memberships
+     ***********************************/
 
     @AuraEnabled(cacheable=true)
     public static List<Contact> getCompletedPunchPassesByContact(
