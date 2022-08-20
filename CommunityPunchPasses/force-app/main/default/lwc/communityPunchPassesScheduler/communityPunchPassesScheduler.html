@@ -18,7 +18,7 @@
             <div class="slds-modal__content slds-var-p-around_medium" id="modal-content-id-1">
 
                 <!-- SPINNER ON LOAD -->
-                <div if:true={isLoading} class="slds-is-relative">
+                <div if:true={isLoading} class="slds-is-relative slds-var-m-around_large" >
                     <lightning-spinner 
                         alternative-text="Loading..." 
                         variant="brand" 
@@ -37,7 +37,7 @@
                             <template for:each={lstStaff} for:item="staff">
                                 <p key={staff.staffId} class="slds-m-bottom_medium">
                                     <button 
-                                        onclick={openStaffSchedule} 
+                                        onclick={goToStaffSchedule} 
                                         data-record-id={staff.staffId} 
                                         class="slds-button slds-button_brand slds-button_stretch"
                                     >
@@ -55,7 +55,7 @@
                             label="Back" 
                             title="Go Back" 
                             icon-name="utility:back" 
-                            onclick={goBackToSelectStaff} 
+                            onclick={goToSelectStaff} 
                             class="slds-m-left_x-small">
                         </lightning-button>
                         <template if:true={selectedStaff.availabilitySlots}>
@@ -80,11 +80,11 @@
                 
             </div>
 
-            <!--
+            
             <footer class="slds-modal__footer">
-                <button class="slds-button slds-button_neutral" onclick={handleCancelEvent} title="Cancel">Back</button>
+                <button class="slds-button slds-button_neutral" onclick={handleCloseEvent} title="Close">Close</button>
             </footer>
-            -->
+
         </div>
     </section>
     <div class="slds-backdrop slds-backdrop_open"></div>

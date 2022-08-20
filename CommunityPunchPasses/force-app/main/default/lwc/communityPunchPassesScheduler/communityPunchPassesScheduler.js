@@ -120,13 +120,13 @@ export default class CommunityPunchPassesScheduler extends LightningElement {
 
     }
 
-    openStaffSchedule(event) {
+    goToStaffSchedule(event) {
         this.selectedStaff = this.lstStaff.find(staff => staff.staffId === event.target.dataset.recordId);
         this.showSelectStaff = false;
         this.showStaffSchedule = true;
     }
 
-    goBackToSelectStaff() {
+    goToSelectStaff() {
         this.showStaffSchedule = false;
         this.showSelectStaff = true;
     }
@@ -135,12 +135,5 @@ export default class CommunityPunchPassesScheduler extends LightningElement {
         this.dispatchEvent(new CustomEvent('close'));
     }
 
-    handleCancelEvent() {
-        this.dispatchEvent(new CustomEvent('cancel'));
-    }
-
-    handleOkayEvent() {
-        this.dispatchEvent(new CustomEvent('okay'));
-    }
 
 }
