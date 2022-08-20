@@ -104,6 +104,11 @@ public with sharing class StaffAvailabilityWrapperService {
                 sas.Date__c, sas.End_Time__c
             );
 
+            // No need to evaluate if current time is later than end date of today's avaiability
+            if (dtScheduleStart > dtScheduleEnd) {
+                continue;
+            }
+
             // Use map of daily appointments to check for full availability
             List<Appointment__c> lstDailyAppts = new List<Appointment__c>();
             if (mapDateToAppts.containsKey(sas.Date__c)) {
