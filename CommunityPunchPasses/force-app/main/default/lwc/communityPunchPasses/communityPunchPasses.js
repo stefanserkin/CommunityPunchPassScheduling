@@ -24,7 +24,7 @@ export default class CommunityPunchPasses extends NavigationMixin(LightningEleme
 					alignment: 'left' 
 				}
 			},
-			{ label: 'Remaining', fieldName: 'TREX1__Remaining_Value__c', type: 'number', fixedWidth: 144, hideDefaultActions: true,
+			{ label: 'Remaining', fieldName: 'Bookable_Credits__c', type: 'number', fixedWidth: 144, hideDefaultActions: true,
 				cellAttributes: { 
 					alignment: 'left' 
 				}
