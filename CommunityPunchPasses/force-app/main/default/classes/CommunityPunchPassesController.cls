@@ -44,17 +44,17 @@ public without sharing class CommunityPunchPassesController {
     ) {
         List<TREX1__Staff__c> lstStaff = [
             SELECT Id, Name, 
-                   (SELECT Id, Name, Date__c, 
-                           Start_Time__c, End_Time__c, 
-                           Start_Time_2__c, End_Time_2__c 
+                   (SELECT Id, Name, Date__c, Location__c, 
+                           Start_Time__c, End_Time__c
                       FROM Staff_Availability_Schedules__r
                      WHERE Date__c >= TODAY
-                       AND Location__c = :locationId),
+                       AND Location__c = :locationId
+                     ORDER BY Date__c ASC),
                    (SELECT Id, Name, Start_DateTime__c, End_DateTime__c 
                       FROM Appointments__r
                      WHERE Start_DateTime__c >= TODAY
                        AND Status__c NOT IN ('Draft','Cancelled')
-                     ORDER BY Start_DateTime__c)
+                     ORDER BY Start_DateTime__c ASC)
               FROM TREX1__Staff__c 
              WHERE Id IN (SELECT Staff__c 
                             FROM Assigned_Staff__c 

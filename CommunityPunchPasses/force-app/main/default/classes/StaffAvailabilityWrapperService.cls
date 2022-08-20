@@ -1,6 +1,7 @@
 public with sharing class StaffAvailabilityWrapperService {
 
     private static final integer APPOINTMENT_INTERVAL_IN_MINUTES = 30;
+    private static Datetime roundedCurrentTime;
 
     /**********************************
      * Returns wrapper with staff id, name, and availability slots
@@ -13,6 +14,8 @@ public with sharing class StaffAvailabilityWrapperService {
         TREX1__Staff__c staff, 
         Integer appointmentLength
     ) {
+        // Set min boundary for earliest booking based on current time
+        setRoundedCurrentTime();
         // Create wrapper with staff details to return
         StaffAvailabilityWrapper staffWrapper = new StaffAvailabilityWrapper();
         staffWrapper.staffId = staff.Id;
@@ -93,12 +96,19 @@ public with sharing class StaffAvailabilityWrapperService {
             Datetime dtScheduleStart = Datetime.newInstance(
                 sas.Date__c, sas.Start_Time__c
             );
+            dtScheduleStart = dtScheduleStart <= roundedCurrentTime ?
+                roundedCurrentTime :
+                dtScheduleStart
+            ;
             Datetime dtScheduleEnd = Datetime.newInstance(
                 sas.Date__c, sas.End_Time__c
             );
 
             // Use map of daily appointments to check for full availability
-            List<Appointment__c> lstDailyAppts = mapDateToAppts.get(sas.Date__c);
+            List<Appointment__c> lstDailyAppts = new List<Appointment__c>();
+            if (mapDateToAppts.containsKey(sas.Date__c)) {
+                lstDailyAppts = mapDateToAppts.get(sas.Date__c);
+            }
 
             // Initialize next start time with start of day availability
             Datetime dtNextStartTime = dtScheduleStart;
@@ -123,6 +133,7 @@ public with sharing class StaffAvailabilityWrapperService {
                 dtNextEndTime = dtNextStartTime.addMinutes( appointmentLength );
             }
 
+            // Get availability slots for rest of day
             while (dtNextEndTime <= dtScheduleEnd) {
                 staffWrapper.availabilitySlots.add( 
                     getSlotFromRange(
@@ -136,6 +147,7 @@ public with sharing class StaffAvailabilityWrapperService {
 
         }
     }
+
 
     /**********************************
      * Get slot object from start and end times
@@ -153,6 +165,24 @@ public with sharing class StaffAvailabilityWrapperService {
         slot.startTime = dtStartTime;
         slot.endTime = dtEndTime;
         return slot;
+    }
+
+
+    /**********************************
+     * Set static variable to next half hour (0 or 30 minutes)
+     ***********************************/
+
+    private static void setRoundedCurrentTime() {
+        Integer minute = System.now().minute() < 30 ? 30 : 0;
+        Integer hour = System.now().minute() < 30 ? System.now().hour() : System.now().hour() + 1;
+        roundedCurrentTime = Datetime.newInstance(
+            System.now().year(), 
+            System.now().month(), 
+            System.now().day(), 
+            hour, 
+            minute, 
+            0
+        );
     }
 
 }
