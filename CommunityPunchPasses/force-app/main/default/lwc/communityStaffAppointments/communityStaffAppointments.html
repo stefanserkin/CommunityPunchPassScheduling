@@ -1,0 +1,18 @@
+<template>
+    <lightning-card title={cardTitle} icon-name="custom:custom95">
+        <p class="slds-var-m-around_medium">A list of upcoming appointments</p>
+        <template if:true={staffWithAppointments}>
+            <template for:each={staffWithAppointments} for:item="staff">
+                <div key={staff.Id}>
+                    <lightning-datatable 
+                        data={staff.Appointments__r} 
+                        columns={cols} 
+                        key-field="Id" 
+                        column-widths-mode="auto" 
+                        onrowaction={handleRowAction} 
+                    ></lightning-datatable>
+                </div>
+            </template>
+        </template>
+    </lightning-card>
+</template>
