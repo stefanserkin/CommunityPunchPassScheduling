@@ -7,6 +7,9 @@ import getCompletedPunchPassesByContact from '@salesforce/apex/CommunityPunchPas
 import getTransactionReceiptId from '@salesforce/apex/CommunityPunchPassesController.getTransactionReceiptId';
 import getPassDecrements from '@salesforce/apex/CommunityPunchPassesController.getPassDecrements';
 
+import { loadStyle } from 'lightning/platformResourceLoader';
+import modalStyle from '@salesforce/resourceUrl/modalWide';
+
 import USER_ID from '@salesforce/user/Id';
 import CONTACTID_FIELD from '@salesforce/schema/User.ContactId';
 import ACCOUNTID_FIELD from '@salesforce/schema/User.AccountId';
@@ -58,6 +61,13 @@ export default class CommunityPunchPasses extends NavigationMixin(LightningEleme
 			]);
 		}
     }
+
+	// Load wide modal css from static resource
+	connectedCallback() {
+		Promise.all([
+			 loadStyle(this, modalStyle)
+		 ])
+	}
 
 	@api membershipCategoryNames = '';
 	@api packageReferenceNameSingular = '';
