@@ -27,6 +27,11 @@ export default class CommunityPunchPassesScheduler extends LightningElement {
     lstStaff;
 
     selectedStaff;
+    // selectedStaff.staffId
+    // selectedStaff.staffName
+    // selectedStaff.availabilitySlots (array)
+    // selectedStaff.availabilitySlots[0].startTime
+    // selectedStaff.availabilitySlots[0].endTime
 
     appointmentStart;
     appointmentEnd;
@@ -50,6 +55,7 @@ export default class CommunityPunchPassesScheduler extends LightningElement {
             rows.forEach(dataParse => {
 				dataParse.availabilitySlots.forEach(slot => {
                     if (slot.startTime) {
+                        // yyyy-mm-ddThh:mm:ss:mmmmZ
                         let dt = new Date( slot.startTime );
                         slot.formattedStartTime = new Intl.DateTimeFormat('en-US', options).format(dt);
                     }
@@ -76,7 +82,7 @@ export default class CommunityPunchPassesScheduler extends LightningElement {
         const newAppointmentStatus = 'Scheduled';
         this.appointmentStart = event.target.dataset.startTime;
         let endTime = new Date(this.appointmentStart);
-        endTime.setMinutes(endTime.getMinutes() + 60);
+        endTime.setMinutes(endTime.getMinutes() + this.appointmentLength);
         this.appointmentEnd = endTime;
 
         const fields = {};
