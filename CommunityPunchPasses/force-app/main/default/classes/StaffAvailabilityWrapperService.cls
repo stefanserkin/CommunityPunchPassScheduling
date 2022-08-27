@@ -93,17 +93,13 @@ public with sharing class StaffAvailabilityWrapperService {
         for (Staff_Availability_Schedule__c sas : lstSchedules) {
 
             // Establish min/max for the daily schedule
-            Datetime dtScheduleStart = Datetime.newInstance(
-                sas.Date__c, sas.Start_Time__c
-            );
+            Datetime dtScheduleStart = sas.Start_DateTime__c;
             dtScheduleStart = dtScheduleStart <= roundedCurrentTime ?
                 roundedCurrentTime :
                 dtScheduleStart
             ;
-            Datetime dtScheduleEnd = Datetime.newInstance(
-                sas.Date__c, sas.End_Time__c
-            );
-
+            Datetime dtScheduleEnd = sas.End_DateTime__c;
+            
             // No need to evaluate if current time is later than end date of today's avaiability
             if (dtScheduleStart > dtScheduleEnd) {
                 continue;
@@ -111,14 +107,14 @@ public with sharing class StaffAvailabilityWrapperService {
 
             // Use map of daily appointments to check for full availability
             List<Appointment__c> lstDailyAppts = new List<Appointment__c>();
-            if (mapDateToAppts.containsKey(sas.Date__c)) {
-                lstDailyAppts = mapDateToAppts.get(sas.Date__c);
+            if (mapDateToAppts.containsKey(sas.Date_Only__c)) {
+                lstDailyAppts = mapDateToAppts.get(sas.Date_Only__c);
             }
 
             // Initialize next start time with start of day availability
             Datetime dtNextStartTime = dtScheduleStart;
             Datetime dtNextEndTime  = dtScheduleStart.addMinutes(appointmentLength);
-
+            
             // If there are appointments, add each appointment-length slot of availability
             for (Appointment__c appt : lstDailyAppts) {
                 while (

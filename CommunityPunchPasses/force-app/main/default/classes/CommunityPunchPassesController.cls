@@ -58,17 +58,19 @@ public without sharing class CommunityPunchPassesController {
         String membershipTypeId, 
         String locationId
     ) {
+        Datetime dtNow = System.now();
         List<TREX1__Staff__c> lstStaff = [
             SELECT Id, Name, 
                    (SELECT Id, Name, Date__c, Location__c, 
-                           Start_Time__c, End_Time__c
+                           Start_Time__c, End_Time__c, Date_Only__c, 
+                           Start_DateTime__c, End_DateTime__c
                       FROM Staff_Availability_Schedules__r
-                     WHERE Date__c >= TODAY
+                     WHERE Start_DateTime__c >= :dtNow
                        AND Location__c = :locationId
                      ORDER BY Date__c ASC),
                    (SELECT Id, Name, Start_DateTime__c, End_DateTime__c 
                       FROM Appointments__r
-                     WHERE Start_DateTime__c >= TODAY
+                     WHERE Start_DateTime__c >= :dtNow
                        AND Status__c NOT IN ('Draft','Cancelled')
                      ORDER BY Start_DateTime__c ASC)
               FROM TREX1__Staff__c 
@@ -82,7 +84,7 @@ public without sharing class CommunityPunchPassesController {
     /**********************************
      * Query for pass decrements related to a given membership id
      *   Returned as strings to pre-format results
-     * @param String membership type id
+     * @param String membership id
      * @return String[] list of formatted dates and times of decrements
      ***********************************/
 
@@ -115,6 +117,29 @@ public without sharing class CommunityPunchPassesController {
         }
         return lstResults;
     }
+
+    /**********************************
+     * Query for appointments related to a given membership id
+     *   Returned as strings to pre-format results
+     * @param TREX1__Membership__c membership id
+     * @return List<Appointment__c> list of appointments
+     ***********************************/
+
+    @AuraEnabled(cacheable=true)
+    public static List<Appointment__c> getAppointmentsFromMembership(
+        TREX1__Membership__c membership
+    ) {
+        return [
+            SELECT Id, Name, Start_DateTime__c, End_DateTime__c, 
+                   Status__c, Attended__c, Staff__c, Staff__r.Name
+              FROM Appointment__c
+             WHERE Membership__c = :membership.Id
+               AND Status__c != 'Draft'
+             ORDER BY Start_DateTime__c DESC
+             LIMIT 10000
+        ];
+    }
+
 
     /**********************************
      * Query for receipt attachment id for a given transaction id
@@ -163,6 +188,41 @@ public without sharing class CommunityPunchPassesController {
         if (!String.isBlank(strRowTargetUrlField)) {
             strQuery += ', ' + String.escapeSingleQuotes(strRowTargetUrlField) + ' ';
         }
+        strQuery += ' FROM TREX1__Memberships__r WHERE RecordType.DeveloperName = :PUNCH_PASS_RECORDTYPE_NAME' + 
+            ' AND TREX1__Category_Name__c IN :lstMembershipCategoryNames' + 
+            ' AND TREX1__Remaining_Value__c > 0 AND TREX1__Status__c != :MEMBERSHIP_STATUS_COMPLETE' + 
+            ' AND (TREX1__End_Date__c >= TODAY OR TREX1__End_Date__c = NULL) ORDER BY TREX1__End_Date__c ASC NULLS LAST)' + 
+            ' FROM Contact WHERE AccountId = :accountId' + 
+            ' AND Id IN (SELECT TREX1__Contact__c FROM TREX1__Membership__c WHERE RecordType.DeveloperName = :PUNCH_PASS_RECORDTYPE_NAME' + 
+            ' AND TREX1__Category_Name__c IN :lstMembershipCategoryNames' + 
+            ' AND TREX1__Remaining_Value__c > 0 AND TREX1__Status__c != :MEMBERSHIP_STATUS_COMPLETE)' + 
+            ' WITH SECURITY_ENFORCED ORDER BY FirstName ASC LIMIT 10000';
+        lstContacts = Database.query(String.escapeSingleQuotes(strQuery));
+
+        return lstContacts;
+
+    }
+
+    /**********************************
+     * Query for all contacts in the household with active punch pass memberships
+     *   Originally constructed dynamically to prevent exceptions if no target url field is defined
+     *   in the community component's design time attributes. No longer necessary.
+     * @param String account id
+     * @param String membership category names - comma-separated
+     * @return Contact[] list of contacts with active punch pass memberships
+     ***********************************/
+
+    @AuraEnabled(cacheable=true)
+    public static List<Contact> getActivePunchPassesByContact2(
+        String accountId,
+        String strMembershipCategoryNames
+    ) {
+        List<Contact> lstContacts = new List<Contact>();
+        List<String> lstMembershipCategoryNames = CommunityPunchPassesHelper.getListOfCategoriesFromString(
+            strMembershipCategoryNames
+        );
+        String strQuery = 'SELECT Id, FirstName, LastName, ';
+        strQuery += '(SELECT Id, Name, TREX1__Contact__c, TREX1__Contact__r.Name, TREX1__Contact__r.FirstName, TREX1__memb_Type__c, TREX1__memb_Type__r.Name, TREX1__Type__c, TREX1__memb_Type__r.TREX1__Location__c, TREX1__memb_Type__r.Appointment_Length__c, TREX1__Category_Name__c, TREX1__Status__c, TREX1__Account__r.Name, TREX1__Start_Date__c, TREX1__End_Date__c, TREX1__Purchasing_Transaction__c, TREX1__Remaining_Value__c, TREX1__Stored_Value__c, TREX1__Total_Value__c, Effectively_Used_Credits__c, Bookable_Credits__c, CreatedDate';
         strQuery += ' FROM TREX1__Memberships__r WHERE RecordType.DeveloperName = :PUNCH_PASS_RECORDTYPE_NAME' + 
             ' AND TREX1__Category_Name__c IN :lstMembershipCategoryNames' + 
             ' AND TREX1__Remaining_Value__c > 0 AND TREX1__Status__c != :MEMBERSHIP_STATUS_COMPLETE' + 
