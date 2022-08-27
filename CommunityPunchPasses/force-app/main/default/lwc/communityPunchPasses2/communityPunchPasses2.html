@@ -1,0 +1,155 @@
+<template>
+	<!-- APPOINTMENT DETAIL MODAL -->
+    <template if:true={showModal}>
+        <c-community-punch-passes-modal2
+			punch-pass={selectedPunchPass} 
+			cancellation-hours-notice={cancellationHoursNotice} 
+            onclose={handleModalClose} 
+			ongotoscheduler={handleShowScheduler}
+        ></c-community-punch-passes-modal2>
+    </template>
+
+	<!-- SCHEDULER MODAL -->
+    <template if:true={showScheduler}>
+        <c-community-punch-pass-scheduler2
+			punch-pass={selectedPunchPass} 
+			membership-type-id={selectedMembershipTypeId} 
+			location-id={selectedLocationId} 
+			appointment-length={selectedAppointmentLength}
+            onclose={handleModalClose}
+        ></c-community-punch-pass-scheduler2>
+    </template>
+
+	<!-- LIGHTNING CARD -->
+	<lightning-card title={cardTitle} icon-name={cardIcon}>
+		<!-- NAVIGATE TO EXTERNAL SYSTEM -->
+		<template if:true={showNavigationButton}>
+			<lightning-button 
+				slot="actions" 
+				variant="brand-outline" 
+				label={navigationButtonLabel} 
+				title={navigationButtonLabel} 
+				onclick={handleNavigationButton} 
+				icon-name={navigationButtonIcon}
+				icon-position="right" 
+				class="slds-var-m-right_small" 
+			></lightning-button>
+		</template>
+		<!-- REFRESH COMPONENT -->
+		<lightning-button-icon 
+			slot="actions" 
+			icon-name="utility:refresh"  
+			alternative-text="Refresh Component" 
+			title="Refresh"
+			onclick={refreshComponent}
+		><label></label>
+		</lightning-button-icon>
+
+		<!-- SPINNER ON LOAD -->
+		<lightning-spinner 
+			if:true={isLoading} 
+			alternative-text="Loading" 
+			variant="brand" 
+			size="medium"
+		></lightning-spinner>
+
+		<template if:false={householdHasPunchPassActivity}>
+			<p class="slds-var-m-around_medium">
+				{noPunchPassActivityDescription}
+			</p>
+		</template>
+
+		<template if:true={householdHasPunchPassActivity}>
+			<lightning-accordion allow-multiple-sections-open>
+
+				<!-- ACTIVE PUNCH PASSES -->
+				<lightning-accordion-section 
+					name="Active Punch Passes" 
+					label={activePunchPassesSectionLabel}
+					class="accordion-section"
+				>
+					<template if:true={householdHasActivePunchPasses}>
+						<lightning-accordion allow-multiple-sections-open>
+							<template for:each={contactsWithActivePunchPasses} for:item="cont">
+								<lightning-accordion-section 
+									name={cont.fullName} 
+									label={cont.sectionLabel} 
+									key={cont.Id}
+									class="accordion-section"
+								>
+									<template if:true={cont.TREX1__Memberships__r}>
+										<!-- sldsValidatorIgnoreNextLine -->
+										<lightning-datatable
+											data={cont.TREX1__Memberships__r}
+											columns={cols}
+											key-field="Id"
+											column-widths-mode="auto"
+											onrowaction={handleRowAction}
+											resize-column-disabled
+											hide-checkbox-column
+										></lightning-datatable>
+									</template>
+									<template if:false={cont.TREX1__Memberships__r}>
+										<p class="slds-var-m-around_medium">
+											{noActivePunchPassesDescriptionContact}
+										</p>
+									</template>
+								</lightning-accordion-section>
+							</template>
+						</lightning-accordion>
+					</template>		
+					<template if:false={householdHasActivePunchPasses}>
+						<p class="slds-var-m-around_medium">
+							{noActivePunchPassesDescription}
+						</p>
+					</template>
+				</lightning-accordion-section>
+	
+				<!-- COMPLETED PUNCH PASSES -->
+				<lightning-accordion-section 
+					name="Completed Punch Passes" 
+					label={completedPunchPassesSectionLabel}
+					class="accordion-section"
+				>
+					<template if:true={householdHasCompletedPunchPasses}>
+						<lightning-accordion allow-multiple-sections-open>
+							<template for:each={contactsWithCompletedPunchPasses} for:item="cont">
+								<lightning-accordion-section 
+									name={cont.fullName} 
+									label={cont.sectionLabel} 
+									key={cont.Id}
+									class="accordion-section"
+								>
+									<template if:true={cont.TREX1__Memberships__r}>
+										<!-- sldsValidatorIgnoreNextLine -->
+										<lightning-datatable
+											data={cont.TREX1__Memberships__r}
+											columns={cols}
+											key-field="Id"
+											column-widths-mode="auto"
+											onrowaction={handleRowAction}
+											resize-column-disabled
+											hide-checkbox-column
+										></lightning-datatable>
+									</template>
+									<template if:false={cont.TREX1__Memberships__r}>
+										<p class="slds-var-m-around_medium">
+											{noCompletedPunchPassesDescriptionContact}
+										</p>
+									</template>
+								</lightning-accordion-section>
+							</template>
+						</lightning-accordion>
+					</template>		
+					<template if:false={householdHasCompletedPunchPasses}>
+						<p class="slds-var-m-around_medium">
+							{noCompletedPunchPassesDescription}
+						</p>
+					</template>
+				</lightning-accordion-section>
+				
+			</lightning-accordion>
+		</template>
+
+	</lightning-card>
+</template>

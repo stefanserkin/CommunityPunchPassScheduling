@@ -1,0 +1,60 @@
+<template>    
+    <section role="dialog" tabindex="-1" aria-labelledby="modal-heading-01" aria-modal="true" aria-describedby="modal-content-id-1" class="slds-modal slds-fade-in-open">
+        <div class="slds-modal__container">
+            <header class="slds-modal__header">
+                <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse" title="Close" onclick={handleCloseEvent}>
+                    <lightning-icon icon-name="utility:close"
+                        alternative-text="close"
+                        variant="inverse"
+                        size="small" ></lightning-icon>
+                    <span class="slds-assistive-text">Close</span>
+                </button>
+                <label></label>
+                <h2 id="modal-heading-01" class="slds-text-heading_medium slds-hyphenate">
+                    {punchPass.TREX1__Type__c}
+                </h2>
+            </header>
+            <div class="slds-modal__content slds-var-p-around_medium" id="modal-content-id-1">
+                <!-- SPINNER ON LOAD -->
+                <div if:true={isLoading} class="slds-is-relative slds-var-m-around_large" >
+                    <lightning-spinner 
+                        alternative-text="Loading..." 
+                        variant="brand" 
+                        size="medium"
+                    ></lightning-spinner>
+                </div>
+
+                <template if:false={isLoading}>
+                    <p class="slds-text-heading_small slds-var-m-around_medium">
+                        {creditSummary}
+                    </p>
+
+                    <lightning-datatable
+                        data={appointments} 
+                        columns={cols} 
+                        key-field="Id" 
+                        column-widths-mode="auto" 
+                        resize-column-disabled 
+                        hide-checkbox-column 
+                        onrowaction={handleRowAction}
+                    ></lightning-datatable>
+
+                </template>
+            </div>
+            <footer class="slds-modal__footer">
+                <div class="slds-grid slds-gutters">
+                    <div class="slds-col slds-size_1-of-3">
+                        {cancellationPolicy}
+                    </div>
+                    <div class="slds-col slds-size_1-of-3">
+                    </div>
+                    <div class="slds-col slds-size_1-of-3">
+                        <button class="slds-button slds-button_outline-brand" onclick={handleCloseEvent} title="OK">OK</button>
+                        <button if:true={hasBookableAppointments} class="slds-button slds-button_brand slds-var-m-left_small" onclick={showScheduler} title="Schedule">Schedule Appointments</button>
+                    </div>
+                </div>
+            </footer>
+        </div>
+    </section>
+    <div class="slds-backdrop slds-backdrop_open"></div>
+</template>
