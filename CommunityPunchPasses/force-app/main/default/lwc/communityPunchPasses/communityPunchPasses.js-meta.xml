@@ -40,38 +40,48 @@
                 required="true"
             />
             <property 
-                name="showExternalSystemButton" 
+                name="showNavigationButton" 
                 type="Boolean" 
-                label="Show Button to External System" 
+                label="Show Navigation Button"
+                description="Enables a navigation button in the Lightning Card actions"
             />
             <property 
-                name="externalSystemButtonLabel" 
+                name="navigationButtonLabel" 
                 type="String" 
-                label="External System Button Label" 
-                default="Schedule Appointments" 
+                label="Navigation Button Label" 
+                default="Purchase Packages" 
             />
             <property 
-                name="externalSystemUrl" 
+                name="navigationButtonIcon" 
+                type="String"
+                label="Navigation Button SLDS Icon Name" 
+                default="utility:event_ext"
+                description="Use icon names in the SLDS library"
+                required="true"
+            />
+            <property 
+                name="navigationButtonUrl" 
                 type="String" 
-                label="External System URL" 
-                placeholder="https://www.mindbodyonline.com/explore" 
+                label="Navigation Button URL" 
+                placeholder="/s/membership" 
             />
             <property 
-                name="openExternalSystemUrlInNewTab" 
+                name="openNavigationUrlInNewTab" 
                 type="Boolean" 
-                label="Open External System in New Tab/Window"
+                label="Open Navigation URL in new tab"
             />
             <property 
-                name="showScheduleAppointmentAction" 
+                name="enableAppointmentScheduling" 
                 type="Boolean" 
-                label="Show Schedule Appointment Row Action"
-                description="If selecting this option, must include a Schedule Appointment Action URL"
+                label="Allow appointment scheduling" 
+                description="Enables the Schedule Appointment action for active punch passes with remaining credits"
             />
             <property 
-                name="scheduleAppointmentUrl" 
-                type="String" 
-                label="Schedule Appointment Action URL"
-                description="The API Name of the field on the Membership object with the target URL"
+                name="cancellationHoursNotice" 
+                type="Integer" 
+                label="Required Hours Notice for Cancellation" 
+                default="0"
+                required="true"
             />
         </targetConfig>
     </targetConfigs>

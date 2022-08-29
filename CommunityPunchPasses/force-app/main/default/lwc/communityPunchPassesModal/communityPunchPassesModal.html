@@ -1,4 +1,4 @@
-<template>
+<template>    
     <section role="dialog" tabindex="-1" aria-labelledby="modal-heading-01" aria-modal="true" aria-describedby="modal-content-id-1" class="slds-modal slds-fade-in-open">
         <div class="slds-modal__container">
             <header class="slds-modal__header">
@@ -15,24 +15,44 @@
                 </h2>
             </header>
             <div class="slds-modal__content slds-var-p-around_medium" id="modal-content-id-1">
-                <p class="slds-text-heading_small slds-var-m-around_medium">
-                    {creditSummary}
-                </p>
-                <ul class="slds-list_dotted slds-var-m-around_medium">
-                    <template for:each={decrements} for:item="decrement">
-                        <li key={decrement} class="slds-var-m-around_small">
-                            {decrement}
-                        </li>
-                    </template>
-                </ul>
+                <!-- SPINNER ON LOAD -->
+                <div if:true={isLoading} class="slds-is-relative slds-var-m-around_large" >
+                    <lightning-spinner 
+                        alternative-text="Loading..." 
+                        variant="brand" 
+                        size="medium"
+                    ></lightning-spinner>
+                </div>
+
+                <template if:false={isLoading}>
+                    <p class="slds-text-heading_small slds-var-m-around_medium">
+                        {creditSummary}
+                    </p>
+
+                    <lightning-datatable
+                        data={appointments} 
+                        columns={cols} 
+                        key-field="Id" 
+                        column-widths-mode="auto" 
+                        resize-column-disabled 
+                        hide-checkbox-column 
+                        onrowaction={handleCancelAppointment}
+                    ></lightning-datatable>
+
+                </template>
             </div>
             <footer class="slds-modal__footer">
-                <template if:true={showCancel}>
-                    <button class="slds-button slds-button_neutral" onclick={handleCancelEvent} title="Cancel">Cancel</button>
-                </template>
-                <template if:true={showOkay}>
-                    <button class="slds-button slds-button_brand" onclick={handleOkayEvent} title="OK">OK</button>
-                </template>
+                <div class="slds-grid slds-gutters">
+                    <div class="slds-col slds-size_1-of-3">
+                        {cancellationPolicy}
+                    </div>
+                    <div class="slds-col slds-size_1-of-3">
+                    </div>
+                    <div class="slds-col slds-size_1-of-3">
+                        <button class="slds-button slds-button_outline-brand" onclick={handleCloseEvent} title="Close">Close</button>
+                        <button if:true={hasBookableAppointments} class="slds-button slds-button_brand slds-var-m-left_small" onclick={showScheduler} title="Schedule">Schedule Appointments</button>
+                    </div>
+                </div>
             </footer>
         </div>
     </section>

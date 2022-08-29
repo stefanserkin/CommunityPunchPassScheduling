@@ -36,7 +36,7 @@
                         column-widths-mode="auto" 
                         resize-column-disabled 
                         hide-checkbox-column 
-                        onrowaction={handleRowAction}
+                        onrowaction={handleCancelAppointment}
                     ></lightning-datatable>
 
                 </template>
@@ -49,7 +49,7 @@
                     <div class="slds-col slds-size_1-of-3">
                     </div>
                     <div class="slds-col slds-size_1-of-3">
-                        <button class="slds-button slds-button_outline-brand" onclick={handleCloseEvent} title="OK">OK</button>
+                        <button class="slds-button slds-button_outline-brand" onclick={handleCloseEvent} title="Close">Close</button>
                         <button if:true={hasBookableAppointments} class="slds-button slds-button_brand slds-var-m-left_small" onclick={showScheduler} title="Schedule">Schedule Appointments</button>
                     </div>
                 </div>

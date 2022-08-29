@@ -1,25 +1,21 @@
 <template>
-	<!-- DECREMENT DETAIL MODAL -->
+	<!-- APPOINTMENT DETAIL MODAL -->
     <template if:true={showModal}>
         <c-community-punch-passes-modal
-            modal-header={modalHeader} 
 			punch-pass={selectedPunchPass} 
-            decrements={decrements} 
-            oncancel={handleModalClose} 
-            onokay={handleModalClose} 
-            onclose={handleModalClose}
+			cancellation-hours-notice={cancellationHoursNotice} 
+            onclose={handleModalClose} 
+			ongotoscheduler={handleShowScheduler}
         ></c-community-punch-passes-modal>
     </template>
 
-	<!-- SCHEDULER -->
+	<!-- SCHEDULER MODAL -->
     <template if:true={showScheduler}>
         <c-community-punch-passes-scheduler
 			punch-pass={selectedPunchPass} 
 			membership-type-id={selectedMembershipTypeId} 
 			location-id={selectedLocationId} 
 			appointment-length={selectedAppointmentLength}
-            oncancel={handleModalClose} 
-            onokay={handleModalClose} 
             onclose={handleModalClose}
         ></c-community-punch-passes-scheduler>
     </template>
@@ -27,19 +23,17 @@
 	<!-- LIGHTNING CARD -->
 	<lightning-card title={cardTitle} icon-name={cardIcon}>
 		<!-- NAVIGATE TO EXTERNAL SYSTEM -->
-		<template if:true={showExternalSystemButton}>
-			<template if:true={householdHasActivePunchPasses}>
-				<lightning-button 
-					slot="actions" 
-					variant="brand-outline" 
-					label={externalSystemButtonLabel} 
-					title={externalSystemButtonLabel} 
-					onclick={handleExternalSystemNavigation}
-					icon-name="utility:event_ext" 
-					icon-position="right" 
-					class="slds-var-m-right_small" 
-				></lightning-button>
-			</template>
+		<template if:true={showNavigationButton}>
+			<lightning-button 
+				slot="actions" 
+				variant="brand-outline" 
+				label={navigationButtonLabel} 
+				title={navigationButtonLabel} 
+				onclick={handleNavigationButton} 
+				icon-name={navigationButtonIcon}
+				icon-position="right" 
+				class="slds-var-m-right_small" 
+			></lightning-button>
 		</template>
 		<!-- REFRESH COMPONENT -->
 		<lightning-button-icon 

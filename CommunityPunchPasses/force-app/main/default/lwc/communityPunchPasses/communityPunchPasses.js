@@ -5,7 +5,6 @@ import { refreshApex } from '@salesforce/apex';
 import getActivePunchPassesByContact from '@salesforce/apex/CommunityPunchPassesController.getActivePunchPassesByContact';
 import getCompletedPunchPassesByContact from '@salesforce/apex/CommunityPunchPassesController.getCompletedPunchPassesByContact';
 import getTransactionReceiptId from '@salesforce/apex/CommunityPunchPassesController.getTransactionReceiptId';
-import getPassDecrements from '@salesforce/apex/CommunityPunchPassesController.getPassDecrements';
 
 import { loadStyle } from 'lightning/platformResourceLoader';
 import modalStyle from '@salesforce/resourceUrl/modalWide';
@@ -22,17 +21,17 @@ export default class CommunityPunchPasses extends NavigationMixin(LightningEleme
         super();
         this.cols = [
 			{ label: 'Package', fieldName: 'TREX1__Type__c', type: 'text', hideDefaultActions: true },
-			{ label: 'Used', fieldName: 'Effectively_Used_Credits__c', type: 'number', fixedWidth: 144, hideDefaultActions: true,
+			{ label: 'Used', fieldName: 'Effectively_Used_Credits__c', type: 'number', hideDefaultActions: true,
 				cellAttributes: { 
 					alignment: 'left' 
 				}
 			},
-			{ label: 'Remaining', fieldName: 'Bookable_Credits__c', type: 'number', fixedWidth: 144, hideDefaultActions: true,
+			{ label: 'Remaining', fieldName: 'Bookable_Credits__c', type: 'number', hideDefaultActions: true,
 				cellAttributes: { 
 					alignment: 'left' 
 				}
 			},
-			{ label: 'Expiration Date', fieldName: 'TREX1__End_Date__c', type: 'date', fixedWidth: 144, hideDefaultActions: true, 
+			{ label: 'Expiration Date', fieldName: 'TREX1__End_Date__c', type: 'date', hideDefaultActions: true, 
 				typeAttributes:{
 					year: "numeric",
 					month: "long",
@@ -50,14 +49,14 @@ export default class CommunityPunchPasses extends NavigationMixin(LightningEleme
 		if (row.showScheduleAppointmentAction) {
 			doneCallback([
 				{ label: 'Download Receipt', name: 'download_receipt', iconName: 'action:download' },
-				{ label: 'View Usage History', name: 'view_decrements', iconName: 'action:preview' },
+				{ label: 'View Appointments', name: 'view_appointments', iconName: 'action:preview' },
 				{ label: 'Schedule Appointment', name: 'schedule_appointment', iconName: 'action:new_event' }
 			]);
 
 		} else {
 			doneCallback([
 				{ label: 'Download Receipt', name: 'download_receipt', iconName: 'action:download' },
-				{ label: 'View Usage History', name: 'view_decrements', iconName: 'action:preview' }
+				{ label: 'View Appointments', name: 'view_appointments', iconName: 'action:preview' }
 			]);
 		}
     }
@@ -69,17 +68,17 @@ export default class CommunityPunchPasses extends NavigationMixin(LightningEleme
 		 ])
 	}
 
+	@api cardIcon;
 	@api membershipCategoryNames = '';
 	@api packageReferenceNameSingular = '';
 	@api packageReferenceNamePlural = '';
-	@api showExternalSystemButton;
-	@api externalSystemButtonLabel;
-	@api externalSystemUrl;
-	@api openExternalSystemUrlInNewTab;
-	@api cardIcon;
-
-	@api showScheduleAppointmentAction = false;
-	@api scheduleAppointmentUrl;
+	@api showNavigationButton;
+	@api navigationButtonLabel;
+	@api navigationButtonIcon;
+	@api navigationButtonUrl;
+	@api openNavigationUrlInNewTab;
+	@api enableAppointmentScheduling = false;
+	@api cancellationHoursNotice;
 
 	cols;
 
@@ -88,7 +87,7 @@ export default class CommunityPunchPasses extends NavigationMixin(LightningEleme
 
 	showModal = false;
 	modalContent;
-	decrements = [];
+	appointments = [];
 
 	showScheduler = false;
 
@@ -105,6 +104,7 @@ export default class CommunityPunchPasses extends NavigationMixin(LightningEleme
 	numHouseholdCompletedPunchPasses;
 
 	selectedPunchPass;
+	selectedPunchPassId;
 	selectedMembershipTypeId;
 	selectedLocationId;
 	selectedAppointmentLength;
@@ -175,8 +175,7 @@ export default class CommunityPunchPasses extends NavigationMixin(LightningEleme
 
 	@wire(getActivePunchPassesByContact, { 
 		accountId: '$accountId',
-		strMembershipCategoryNames: '$membershipCategoryNames',
-		strRowTargetUrlField: '$scheduleAppointmentUrl'
+		strMembershipCategoryNames: '$membershipCategoryNames'
 	}) wiredActivePunchPasses(result) {
 		this.isLoading = true;
 		this.wiredContactsWithActivePunchPasses = result;
@@ -198,8 +197,9 @@ export default class CommunityPunchPasses extends NavigationMixin(LightningEleme
 				dataParse.sectionLabel = label;
 				dataParse.TREX1__Memberships__r.forEach(element => {
 					if (
-						this.showScheduleAppointmentAction && 
-						element.TREX1__Stored_Value__c > element.Effectively_Used_Credits__c
+						this.enableAppointmentScheduling && 
+						element.Bookable_Credits__c != null && 
+						element.Bookable_Credits__c > 0
 					) {
 						element.showScheduleAppointmentAction = true;
 					} else {
@@ -263,8 +263,8 @@ export default class CommunityPunchPasses extends NavigationMixin(LightningEleme
             case 'download_receipt':
                 this.downloadReceipt(transactionId);
                 break;
-            case 'view_decrements':
-                this.viewDecrements(row);
+            case 'view_appointments':
+                this.viewAppointments(row);
                 break;
 			case 'schedule_appointment':
 				this.scheduleAppointment(row);
@@ -278,6 +278,11 @@ export default class CommunityPunchPasses extends NavigationMixin(LightningEleme
 		this.selectedMembershipTypeId = row.TREX1__memb_Type__c;
 		this.selectedLocationId = row.TREX1__memb_Type__r.TREX1__Location__c;
 		this.selectedAppointmentLength = row.TREX1__memb_Type__r.Appointment_Length__c;
+		this.showScheduler = true;
+	}
+
+	handleShowScheduler() {
+		this.showModal = false;
 		this.showScheduler = true;
 	}
 
@@ -304,20 +309,12 @@ export default class CommunityPunchPasses extends NavigationMixin(LightningEleme
 
     }
 
-	viewDecrements(row) {
+	viewAppointments(row) {
 		this.selectedPunchPass = row;
-		let rowId = row.Id;
-
-		getPassDecrements({ membershipId: rowId })
-            .then((result) => {
-                this.decrements = result;
-                this.error = undefined;
-				this.showModal = true;
-            })
-            .catch((error) => {
-                this.error = error;
-                this.decrements = undefined;
-            });
+		this.selectedMembershipTypeId = row.TREX1__memb_Type__c;
+		this.selectedLocationId = row.TREX1__memb_Type__r.TREX1__Location__c;
+		this.selectedAppointmentLength = row.TREX1__memb_Type__r.Appointment_Length__c;
+		this.showModal = true;
 	}
 
 	getBaseUrl(){
@@ -336,15 +333,15 @@ export default class CommunityPunchPasses extends NavigationMixin(LightningEleme
     }
 
 	get targetBehavior() {
-		return this.openExternalSystemUrlInNewTab ? '_blank' : '_self';
+		return this.openNavigationUrlInNewTab ? '_blank' : '_self';
 	}
 
-	handleExternalSystemNavigation() {
-		if (this.externalSystemUrl != null) {
+	handleNavigationButton() {
+		if (this.navigationButtonUrl != null) {
 			this[NavigationMixin.GenerateUrl]({
 				type: 'standard__webPage',
 				attributes: {
-					url: this.externalSystemUrl
+					url: this.navigationButtonUrl
 				}
 			}).then(generatedUrl => {
 				window.open(generatedUrl, this.targetBehavior);

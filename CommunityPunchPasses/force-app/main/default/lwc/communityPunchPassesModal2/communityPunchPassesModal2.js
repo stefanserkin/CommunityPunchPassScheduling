@@ -1,11 +1,12 @@
 import { LightningElement, api, wire } from 'lwc';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
-import { updateRecord } from "lightning/uiRecordApi";
+import { updateRecord } from 'lightning/uiRecordApi';
 import { refreshApex } from '@salesforce/apex';
 import getAppointmentsFromMembership from '@salesforce/apex/CommunityPunchPassesController.getAppointmentsFromMembership';
 
-import ID_FIELD from "@salesforce/schema/Appointment__c.Id";
-import STATUS_FIELD from "@salesforce/schema/Appointment__c.Status__c";
+import ID_FIELD from '@salesforce/schema/Appointment__c.Id';
+import STATUS_FIELD from '@salesforce/schema/Appointment__c.Status__c';
+import CANCEL_DATE_FIELD from '@salesforce/schema/Appointment__c.Cancellation_Date__c';
 
 const COLS = [
     { label: 'Start Date', fieldName: 'Start_DateTime__c', type: 'date', hideDefaultActions: true, 
@@ -117,13 +118,17 @@ export default class CommunityPunchPassesModal2 extends LightningElement {
         }
     }
 
-    handleRowAction(event) {
+    handleCancelAppointment(event) {
         this.isLoading = true;
         this.selectedAppointmentId = event.detail.row.Id;
+
+        let today = new Date().toISOString().slice(0, 10);
+        console.log('::::: today : ' + today);
         
         const fields = {};
         fields[ID_FIELD.fieldApiName] = this.selectedAppointmentId;
         fields[STATUS_FIELD.fieldApiName] = 'Cancelled';
+        fields[CANCEL_DATE_FIELD.fieldApiName] = today;
         const recordInput = {
             fields: fields
         };

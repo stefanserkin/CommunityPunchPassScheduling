@@ -2,7 +2,7 @@ import { LightningElement, wire, api } from 'lwc';
 import { NavigationMixin } from 'lightning/navigation';
 import { getRecord, getFieldValue } from 'lightning/uiRecordApi';
 import { refreshApex } from '@salesforce/apex';
-import getActivePunchPassesByContact from '@salesforce/apex/CommunityPunchPassesController.getActivePunchPassesByContact2';
+import getActivePunchPassesByContact from '@salesforce/apex/CommunityPunchPassesController.getActivePunchPassesByContact';
 import getCompletedPunchPassesByContact from '@salesforce/apex/CommunityPunchPassesController.getCompletedPunchPassesByContact';
 import getTransactionReceiptId from '@salesforce/apex/CommunityPunchPassesController.getTransactionReceiptId';
 
@@ -178,14 +178,11 @@ export default class CommunityPunchPasses2 extends NavigationMixin(LightningElem
 		strMembershipCategoryNames: '$membershipCategoryNames'
 	}) wiredActivePunchPasses(result) {
 		this.isLoading = true;
-		console.log('attempted to retrieve active punch passes');
-		console.log('membership string: ' + this.membershipCategoryNames);
 		this.wiredContactsWithActivePunchPasses = result;
 		this.numHouseholdActivePunchPasses = 0;
 	
         if (result.data) {
 			let rows = JSON.parse( JSON.stringify(result.data) );
-			console.table(rows);
 			rows.forEach(dataParse => {
 				let label = '';
 				dataParse.fullName = dataParse.FirstName + ' ' + dataParse.LastName;
