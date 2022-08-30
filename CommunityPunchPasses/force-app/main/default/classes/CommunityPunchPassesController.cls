@@ -35,11 +35,12 @@ public without sharing class CommunityPunchPassesController {
         // return wrapper of staff with availability
         for (TREX1__Staff__c staff : lstStaff) {
             StaffAvailabilityWrapper saw = new StaffAvailabilityWrapper();
-            saw = StaffAvailabilityWrapperService.getWrapperFromStaff(
-                staff, 
-                appointmentLength
+            lstWrappers.addAll(
+                StaffAvailabilityWrapperService.getWrappersFromStaff(
+                    staff, 
+                    appointmentLength
+                )
             );
-            lstWrappers.add(saw);
         }
 
         return lstWrappers;

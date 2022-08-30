@@ -10,18 +10,14 @@ public with sharing class StaffAvailabilityWrapperService {
      * @return StaffAvailabilityWrapper custom wrapper with availability slots
      ***********************************/
 
-    public static StaffAvailabilityWrapper getWrapperFromStaff(
+    public static List<StaffAvailabilityWrapper> getWrappersFromStaff(
         TREX1__Staff__c staff, 
         Integer appointmentLength
     ) {
+        Map<Date, StaffAvailabilityWrapper> mapDateToWrapper = new Map<Date, StaffAvailabilityWrapper>();
+
         // Set min boundary for earliest booking based on current time
         setRoundedCurrentTime();
-        // Create wrapper with staff details to return
-        StaffAvailabilityWrapper staffWrapper = new StaffAvailabilityWrapper();
-        staffWrapper.staffId = staff.Id;
-        staffWrapper.staffName = staff.Name;
-        // Create new list of inner class
-        staffWrapper.availabilitySlots = new List<StaffAvailabilityWrapper.AvailabilitySlot>();
 
         Map<Date, List<Appointment__c>> mapDateToAppts;
         mapDateToAppts = new Map<Date, List<Appointment__c>>();
@@ -32,13 +28,14 @@ public with sharing class StaffAvailabilityWrapperService {
         }
 
         addSlotsToWrapper(
-            staffWrapper, 
+            mapDateToWrapper, 
             staff.Staff_Availability_Schedules__r, 
             mapDateToAppts, 
+            staff, 
             appointmentLength
         );
         
-        return staffWrapper;
+        return mapDateToWrapper.values();
     }
 
 
@@ -85,12 +82,35 @@ public with sharing class StaffAvailabilityWrapperService {
      ***********************************/
 
     private static void addSlotsToWrapper(
-        StaffAvailabilityWrapper staffWrapper, 
+        Map<Date, StaffAvailabilityWrapper> mapDateToWrapper, 
         List<Staff_Availability_Schedule__c> lstSchedules, 
         Map<Date, List<Appointment__c>> mapDateToAppts, 
+        TREX1__Staff__c staff, 
         Integer appointmentLength
     ) {
+
+        if (mapDateToWrapper == null) {
+            mapDateToWrapper = new Map<Date, StaffAvailabilityWrapper>();
+        }
+
         for (Staff_Availability_Schedule__c sas : lstSchedules) {
+
+            if (!mapDateToWrapper.containsKey(sas.Date_Only__c)) {
+                // Create wrapper with staff details to return
+                StaffAvailabilityWrapper staffWrapper = new StaffAvailabilityWrapper();
+                staffWrapper.staffId = staff.Id;
+                staffWrapper.staffName = staff.Name;
+                staffWrapper.availabilityDate = sas.Date_Only__c;
+
+                // Create new list of inner class
+                staffWrapper.availabilitySlots = new List<StaffAvailabilityWrapper.AvailabilitySlot>();
+
+                // Add to map
+                mapDateToWrapper.put(
+                    staffWrapper.availabilityDate, 
+                    staffWrapper
+                );
+            }
 
             // Establish min/max for the daily schedule
             Datetime dtScheduleStart = sas.Start_DateTime__c;
@@ -121,7 +141,7 @@ public with sharing class StaffAvailabilityWrapperService {
                     dtNextEndTime <= appt.Start_DateTime__c && 
                     dtNextEndTime <= dtScheduleEnd
                 ) {
-                    staffWrapper.availabilitySlots.add( 
+                    mapDateToWrapper.get(sas.Date_Only__c).availabilitySlots.add( 
                         getSlotFromRange(
                             dtNextStartTime, 
                             dtNextEndTime
@@ -136,7 +156,7 @@ public with sharing class StaffAvailabilityWrapperService {
 
             // Get availability slots for rest of day
             while (dtNextEndTime <= dtScheduleEnd) {
-                staffWrapper.availabilitySlots.add( 
+                mapDateToWrapper.get(sas.Date_Only__c).availabilitySlots.add( 
                     getSlotFromRange(
                         dtNextStartTime, 
                         dtNextEndTime
