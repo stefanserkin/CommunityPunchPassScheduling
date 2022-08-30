@@ -58,21 +58,30 @@
                             onclick={goToSelectStaff} 
                             class="slds-m-left_x-small">
                         </lightning-button>
-                        <template if:true={selectedStaff.availabilitySlots}>
-                            <p class="slds-text-heading_small slds-var-m-around_medium slds-align_absolute-center">
-                                Select from available times
-                            </p>
-                            <template for:each={selectedStaff.availabilitySlots} for:item="slot">
-                                <p key={slot.startTime} class="slds-m-bottom_medium">
-                                    <button 
-                                        onclick={bookAppointment} 
-                                        data-start-time={slot.startTime} 
-                                        data-end-time={slot.endTime} 
-                                        class="slds-button slds-button_brand slds-button_stretch"
-                                    >
-                                        {slot.formattedStartTime} - {slot.formattedEndTime} 
-                                    </button>
-                                </p>
+                        <p class="slds-text-heading_small slds-var-m-around_medium slds-align_absolute-center">
+                            Select from available times
+                        </p>
+                        <template if:true={selectedStaffAppointmentDays}>
+                            <template for:each={selectedStaffAppointmentDays} for:item="day">
+
+                                <h3 key={day.availabilityDate}
+                                    class="slds-text-heading_medium slds-align_absolute-center slds-var-m-around_medium" 
+                                >
+                                    {day.formattedDate}
+                                </h3>
+
+                                <template for:each={day.availabilitySlots} for:item="slot">
+                                    <p key={slot.startTime} class="slds-m-bottom_medium">
+                                        <button 
+                                            onclick={bookAppointment} 
+                                            data-start-time={slot.startTime} 
+                                            data-end-time={slot.endTime} 
+                                            class="slds-button slds-button_brand slds-button_stretch"
+                                        >
+                                            {slot.formattedStartTime} - {slot.formattedEndTime} 
+                                        </button>
+                                    </p>    
+                                </template>
                             </template>
                         </template>
                     </template>

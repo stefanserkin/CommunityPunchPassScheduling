@@ -17,61 +17,84 @@ export default class CommunityPunchPassesScheduler2 extends LightningElement {
     @api membershipTypeId;
     @api locationId;
     @api appointmentLength;
+
     isLoading = false;
     error;
 
     showSelectStaff = true;
     showStaffSchedule = false;
 
-    wiredStaff = [];
     lstStaff;
+    selectedStaffId;
 
-    selectedStaff;
-    // selectedStaff.staffId
-    // selectedStaff.staffName
-    // selectedStaff.availabilitySlots (array)
-    // selectedStaff.availabilitySlots[0].startTime
-    // selectedStaff.availabilitySlots[0].endTime
+    wiredAppointmentDays = [];
+    allAppointmentDays;
+
+    selectedStaffAppointmentDays;
 
     appointmentStart;
     appointmentEnd;
     newAppointmentId;
 
+    /*****************************************
+     * Returns array of dates with a nested array of availability slots
+     * Each day has a staffId and staffName to identify the staff member
+     * (Date) row.availabilityDate
+     * (String) row.staffId
+     * (String) row.staffName
+     * (Array) row.availabilitySlots
+     *      (DateTime) row.availabilitySlots[0].startTime
+     *      (DateTime) row.availabilitySlots[0].endTime
+     *****************************************/
+
     @wire(getAssignedStaffAvailability, { 
 		membershipTypeId: '$membershipTypeId', 
         locationId: '$locationId', 
         appointmentLength: '$appointmentLength'
-	}) wiredStaffMembers(result) {
+	}) wiredWrappers(result) {
 		this.isLoading = true;
-		this.wiredStaff = result;
+		this.wiredAppointmentDays = result;
 	
         if (result.data) {
 			let rows = JSON.parse( JSON.stringify(result.data) );
-            const options = {
-                year: 'numeric', month: 'numeric', day: 'numeric', 
-                hour: 'numeric', minute: 'numeric', second: 'numeric', 
-                hour12: true
+            let lstStaffWithDuplicates = [];
+            const timeOptions = {
+                hour: 'numeric', minute: 'numeric', hour12: true
+            };
+            const dateOptions = {
+                year: "numeric", month: "numeric", day: "numeric"
             };
             rows.forEach(dataParse => {
+                // Add staff to list to later de-dupe for staff selection screen
+                let staff = {staffId: dataParse.staffId, staffName: dataParse.staffName};
+                lstStaffWithDuplicates.push(staff);
+
+                let d = new Date(dataParse.availabilityDate);
+                dataParse.formattedDate = new Intl.DateTimeFormat('en-US', dateOptions).format(d);
+                
 				dataParse.availabilitySlots.forEach(slot => {
                     if (slot.startTime) {
-                        // yyyy-mm-ddThh:mm:ss:mmmmZ
                         let dt = new Date( slot.startTime );
-                        slot.formattedStartTime = new Intl.DateTimeFormat('en-US', options).format(dt);
+                        slot.formattedStartTime = new Intl.DateTimeFormat('en-US', timeOptions).format(dt);
                     }
                     if (slot.endTime) {
                         let dt = new Date( slot.endTime );
-                        slot.formattedEndTime = new Intl.DateTimeFormat('en-US', options).format(dt);
+                        slot.formattedEndTime = new Intl.DateTimeFormat('en-US', timeOptions).format(dt);
                     }
                 })
 			});
-            this.lstStaff = rows;
+
+            // De-dupe staff list
+            const key = 'staffId';
+            this.lstStaff = [...new Map(lstStaffWithDuplicates.map(item => [item[key], item])).values()];
+
+            this.allAppointmentDays = rows;
             this.error = undefined;
 			this.isLoading = false;
         } else if (result.error) {
 			console.error(result.error);
             this.error = result.error;
-            this.lstStaff = undefined;
+            this.allAppointmentDays = undefined;
 			this.isLoading = false;
         }
     }
@@ -89,7 +112,7 @@ export default class CommunityPunchPassesScheduler2 extends LightningElement {
         fields[CONTACT_FIELD.fieldApiName] = this.punchPass.TREX1__Contact__c;
         fields[STARTDATE_FIELD.fieldApiName] = this.appointmentStart;
         fields[ENDDATE_FIELD.fieldApiName] = this.appointmentEnd;
-        fields[STAFF_FIELD.fieldApiName] = this.selectedStaff.staffId;
+        fields[STAFF_FIELD.fieldApiName] = this.selectedStaffId;
         fields[STATUS_FIELD.fieldApiName] = newAppointmentStatus;
         fields[MEMBERSHIP_FIELD.fieldApiName] = this.punchPass.Id;
         const recordInput = { 
@@ -127,7 +150,9 @@ export default class CommunityPunchPassesScheduler2 extends LightningElement {
     }
 
     goToStaffSchedule(event) {
-        this.selectedStaff = this.lstStaff.find(staff => staff.staffId === event.target.dataset.recordId);
+        this.selectedStaffId = event.target.dataset.recordId;
+        console.log('selected staff id is ' + this.selectedStaffId);
+        this.selectedStaffAppointmentDays = this.allAppointmentDays.filter(appt => appt.staffId === this.selectedStaffId);
         this.showSelectStaff = false;
         this.showStaffSchedule = true;
     }
