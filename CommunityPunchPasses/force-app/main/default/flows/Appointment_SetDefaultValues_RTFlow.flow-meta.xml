@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Flow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <apiVersion>55.0</apiVersion>
+    <assignments>
+        <name>Set_Category_and_Type</name>
+        <label>Set Category and Type</label>
+        <locationX>50</locationX>
+        <locationY>431</locationY>
+        <assignmentItems>
+            <assignToReference>$Record.Membership_Category__c</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <elementReference>$Record.Membership__r.TREX1__memb_Category__c</elementReference>
+            </value>
+        </assignmentItems>
+        <assignmentItems>
+            <assignToReference>$Record.Membership_Type__c</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <elementReference>$Record.Membership__r.TREX1__memb_Type__c</elementReference>
+            </value>
+        </assignmentItems>
+        <connector>
+            <targetReference>Check_End_DateTime</targetReference>
+        </connector>
+    </assignments>
+    <assignments>
+        <name>Set_End_DateTime</name>
+        <label>Set End DateTime</label>
+        <locationX>50</locationX>
+        <locationY>767</locationY>
+        <assignmentItems>
+            <assignToReference>$Record.End_DateTime__c</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <elementReference>dtEndDateTime</elementReference>
+            </value>
+        </assignmentItems>
+        <connector>
+            <targetReference>Check_for_Status_Updates</targetReference>
+        </connector>
+    </assignments>
+    <assignments>
+        <name>Set_Owner</name>
+        <label>Set Owner</label>
+        <locationX>182</locationX>
+        <locationY>1319</locationY>
+        <assignmentItems>
+            <assignToReference>$Record.OwnerId</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <elementReference>$Record.Staff__r.OwnerId</elementReference>
+            </value>
+        </assignmentItems>
+    </assignments>
+    <assignments>
+        <name>Set_Status_to_Complete</name>
+        <label>Set Status to Complete</label>
+        <locationX>50</locationX>
+        <locationY>1103</locationY>
+        <assignmentItems>
+            <assignToReference>$Record.Status__c</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <stringValue>Complete</stringValue>
+            </value>
+        </assignmentItems>
+        <connector>
+            <targetReference>Set_Owner</targetReference>
+        </connector>
+    </assignments>
+    <decisions>
+        <name>Check_Category_and_Type</name>
+        <label>Check Category and Type</label>
+        <locationX>182</locationX>
+        <locationY>311</locationY>
+        <defaultConnector>
+            <targetReference>Check_End_DateTime</targetReference>
+        </defaultConnector>
+        <defaultConnectorLabel>Default Outcome</defaultConnectorLabel>
+        <rules>
+            <name>Category_or_Type_is_Null</name>
+            <conditionLogic>or</conditionLogic>
+            <conditions>
+                <leftValueReference>$Record.Membership_Category__c</leftValueReference>
+                <operator>IsNull</operator>
+                <rightValue>
+                    <booleanValue>true</booleanValue>
+                </rightValue>
+            </conditions>
+            <conditions>
+                <leftValueReference>$Record.Membership_Type__c</leftValueReference>
+                <operator>IsNull</operator>
+                <rightValue>
+                    <booleanValue>true</booleanValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>Set_Category_and_Type</targetReference>
+            </connector>
+            <label>Category or Type is Null</label>
+        </rules>
+    </decisions>
+    <decisions>
+        <name>Check_End_DateTime</name>
+        <label>Check End DateTime</label>
+        <locationX>182</locationX>
+        <locationY>647</locationY>
+        <defaultConnector>
+            <targetReference>Check_for_Status_Updates</targetReference>
+        </defaultConnector>
+        <defaultConnectorLabel>Default Outcome</defaultConnectorLabel>
+        <rules>
+            <name>End_DateTime_is_Null</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>$Record.End_DateTime__c</leftValueReference>
+                <operator>IsNull</operator>
+                <rightValue>
+                    <booleanValue>true</booleanValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>Set_End_DateTime</targetReference>
+            </connector>
+            <label>End DateTime is Null</label>
+        </rules>
+    </decisions>
+    <decisions>
+        <name>Check_for_Status_Updates</name>
+        <label>Check for Status Updates</label>
+        <locationX>182</locationX>
+        <locationY>983</locationY>
+        <defaultConnector>
+            <targetReference>Set_Owner</targetReference>
+        </defaultConnector>
+        <defaultConnectorLabel>Default Outcome</defaultConnectorLabel>
+        <rules>
+            <name>Date_is_in_the_Past</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>$Record.End_DateTime__c</leftValueReference>
+                <operator>LessThanOrEqualTo</operator>
+                <rightValue>
+                    <elementReference>$Flow.CurrentDateTime</elementReference>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>Set_Status_to_Complete</targetReference>
+            </connector>
+            <label>Date is in the Past</label>
+        </rules>
+    </decisions>
+    <formulas>
+        <name>dtEndDateTime</name>
+        <dataType>DateTime</dataType>
+        <expression>{!$Record.Start_DateTime__c} + {!$Record.Membership__r.TREX1__memb_Type__r.Appointment_Length__c} / 1440</expression>
+    </formulas>
+    <formulas>
+        <name>ownerId</name>
+        <dataType>String</dataType>
+        <expression>IF( !ISBLANK( {!$Record.Staff__r.TREX1__User__c} ) ,
+  {!$Record.Staff__r.TREX1__User__c} ,
+  IF( !ISBLANK( {!$Record.Staff__r.Contact__c} ) ,
+    {!$Record.Staff__r.Contact__c} , 
+    {!$Record.OwnerId}
+  )
+)</expression>
+    </formulas>
+    <interviewLabel>Appointment {!$Flow.CurrentDateTime}</interviewLabel>
+    <label>Appointment SetDefaultValues RTFlow</label>
+    <processMetadataValues>
+        <name>BuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>CanvasMode</name>
+        <value>
+            <stringValue>AUTO_LAYOUT_CANVAS</stringValue>
+        </value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>OriginBuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processType>AutoLaunchedFlow</processType>
+    <start>
+        <locationX>56</locationX>
+        <locationY>0</locationY>
+        <connector>
+            <targetReference>Check_Category_and_Type</targetReference>
+        </connector>
+        <object>Appointment__c</object>
+        <recordTriggerType>Create</recordTriggerType>
+        <triggerType>RecordBeforeSave</triggerType>
+    </start>
+    <status>Active</status>
+</Flow>
