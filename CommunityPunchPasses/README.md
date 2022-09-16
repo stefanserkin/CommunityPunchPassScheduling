@@ -4,4 +4,4 @@ A solution for booking private lessons from Salesforce Communities. Review purch
 
 ## Read All About It
 
-- [Doc](https://quip.com/Rs8gATCdwLxZ/Community-Punch-Passes-Component-2)
+- [Doc](https://quip.com/Rs8gATCdwLxZ/Community-Punch-Passes-Component-Deck)
