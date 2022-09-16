@@ -89,10 +89,6 @@ public with sharing class StaffAvailabilityWrapperService {
         Integer appointmentLength
     ) {
 
-        if (mapDateToWrapper == null) {
-            mapDateToWrapper = new Map<Date, StaffAvailabilityWrapper>();
-        }
-
         for (Staff_Availability_Schedule__c sas : lstSchedules) {
 
             if (!mapDateToWrapper.containsKey(sas.Date_Only__c)) {
@@ -114,10 +110,13 @@ public with sharing class StaffAvailabilityWrapperService {
 
             // Establish min/max for the daily schedule
             Datetime dtScheduleStart = sas.Start_DateTime__c;
+            System.debug('dtScheduleStart: ' + dtScheduleStart);
+            System.debug('roundedCurrentTime: ' + roundedCurrentTime);
             dtScheduleStart = dtScheduleStart <= roundedCurrentTime ?
                 roundedCurrentTime :
                 dtScheduleStart
             ;
+            System.debug('dtScheduleStart: ' + dtScheduleStart);
             Datetime dtScheduleEnd = sas.End_DateTime__c;
             
             // No need to evaluate if current time is later than end date of today's avaiability

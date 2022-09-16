@@ -62,16 +62,15 @@ public without sharing class CommunityPunchPassesController {
         Datetime dtNow = System.now();
         List<TREX1__Staff__c> lstStaff = [
             SELECT Id, Name, 
-                   (SELECT Id, Name, Date__c, Location__c, 
-                           Start_Time__c, End_Time__c, Date_Only__c, 
+                   (SELECT Id, Name, Location__c, Date_Only__c, 
                            Start_DateTime__c, End_DateTime__c
                       FROM Staff_Availability_Schedules__r
-                     WHERE Start_DateTime__c >= :dtNow
+                     WHERE End_DateTime__c >= :dtNow
                        AND Location__c = :locationId
                      ORDER BY Start_DateTime__c ASC),
                    (SELECT Id, Name, Start_DateTime__c, End_DateTime__c 
                       FROM Appointments__r
-                     WHERE Start_DateTime__c >= :dtNow
+                     WHERE End_DateTime__c >= :dtNow
                        AND Status__c NOT IN ('Draft','Cancelled')
                      ORDER BY Start_DateTime__c ASC)
               FROM TREX1__Staff__c 
@@ -192,7 +191,7 @@ public without sharing class CommunityPunchPassesController {
             ' AND Id IN (SELECT TREX1__Contact__c FROM TREX1__Membership__c WHERE RecordType.DeveloperName = :PUNCH_PASS_RECORDTYPE_NAME' + 
             ' AND TREX1__Category_Name__c IN :lstMembershipCategoryNames' + 
             ' AND TREX1__Remaining_Value__c > 0 AND TREX1__Status__c != :MEMBERSHIP_STATUS_COMPLETE)' + 
-            ' WITH SECURITY_ENFORCED ORDER BY FirstName ASC LIMIT 10000';
+            ' ORDER BY FirstName ASC LIMIT 10000';
         lstContacts = Database.query(String.escapeSingleQuotes(strQuery));
 
         return lstContacts;
@@ -221,7 +220,9 @@ public without sharing class CommunityPunchPassesController {
                    (SELECT Id, Name, TREX1__Contact__c, TREX1__Contact__r.Name, TREX1__Contact__r.FirstName,
                            TREX1__memb_Type__r.Name, TREX1__Type__c, TREX1__Category_Name__c, TREX1__Status__c,
                            TREX1__Account__r.Name, TREX1__Start_Date__c, TREX1__End_Date__c, TREX1__Purchasing_Transaction__c,
-                           TREX1__Remaining_Value__c, TREX1__Stored_Value__c, TREX1__Total_Value__c, CreatedDate
+                           TREX1__Remaining_Value__c, TREX1__Stored_Value__c, TREX1__Total_Value__c, 
+                           Bookable_Credits__c, Effectively_Used_Credits__c, TREX1__memb_Type__r.Appointment_Length__c, 
+                           TREX1__memb_Type__r.TREX1__Location__c, CreatedDate
                       FROM TREX1__Memberships__r
                      WHERE RecordType.DeveloperName = :PUNCH_PASS_RECORDTYPE_NAME
                        AND TREX1__Category_Name__c IN :lstMembershipCategoryNames
@@ -238,7 +239,6 @@ public without sharing class CommunityPunchPassesController {
                              AND ((TREX1__Stored_Value__c > 0 
                                  AND TREX1__Remaining_Value__c = 0)
                               OR TREX1__Status__c = :MEMBERSHIP_STATUS_COMPLETE))
-              WITH SECURITY_ENFORCED
              ORDER BY FirstName ASC
              LIMIT 10000
         ];

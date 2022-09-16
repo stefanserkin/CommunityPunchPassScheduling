@@ -50,6 +50,17 @@ private class CommunityPunchPassesController_Test {
         attach.parentId = trans.id;
         insert attach;
 
+        List<TREX1__Membership_Category__c> lstCategories = TestDataFactory.createMembershipCategories(1);
+        insert lstCategories;
+
+        List<TREX1__Location__c> lstLocations = TestDataFactory.createLocations(1);
+        insert lstLocations;
+
+        List<TREX1__Membership_Type__c> lstTypes = TestDataFactory.createMembershipTypes(
+            lstCategories, lstLocations.get(0), 1
+        );
+        insert lstTypes;
+
         List<TREX1__Membership__c> lstMemberships = new List<TREX1__Membership__c>();
         // Completed membership
         lstMemberships.add(
@@ -57,10 +68,12 @@ private class CommunityPunchPassesController_Test {
                 TREX1__Contact__c = lstContacts.get(0).Id, 
                 TREX1__Account__c = acc.Id, 
                 RecordTypeId = punchPassRecTypeId, 
-                TREX1__Status__c = STATUS_COMPLETE,
-                TREX1__Category_Name__c = VALID_MEMBERSHIP_CATEGORY,
-                TREX1__Start_Date__c = Date.today().addDays(-1),
-                TREX1__Stored_Value__c = 1,
+                TREX1__Status__c = STATUS_COMPLETE, 
+                TREX1__memb_Category__c = lstCategories[0].Id, 
+                TREX1__Category_Name__c = VALID_MEMBERSHIP_CATEGORY, 
+                TREX1__memb_Type__c = lstTypes[0].Id, 
+                TREX1__Start_Date__c = Date.today().addDays(-1), 
+                TREX1__Stored_Value__c = 1, 
                 TREX1__Purchasing_Transaction__c = trans.Id
             )
         );
@@ -71,9 +84,11 @@ private class CommunityPunchPassesController_Test {
                     TREX1__Contact__c = ct.Id, 
                     TREX1__Account__c = acc.Id, 
                     RecordTypeId = punchPassRecTypeId, 
-                    TREX1__Status__c = STATUS_ACTIVE,
-                    TREX1__Category_Name__c = VALID_MEMBERSHIP_CATEGORY,
-                    TREX1__Start_Date__c = Date.today().addDays(-1),
+                    TREX1__Status__c = STATUS_ACTIVE, 
+                    TREX1__memb_Category__c = lstCategories[0].Id, 
+                    TREX1__Category_Name__c = VALID_MEMBERSHIP_CATEGORY, 
+                    TREX1__memb_Type__c = lstTypes[0].Id, 
+                    TREX1__Start_Date__c = Date.today().addDays(-1), 
                     TREX1__Stored_Value__c = 6
                 )
             );
@@ -154,8 +169,7 @@ private class CommunityPunchPassesController_Test {
         List<Contact> lstCtsWithActiveMems = new List<Contact>();
         lstCtsWithActiveMems = CommunityPunchPassesController.getActivePunchPassesByContact(
             acc.Id,
-            VALID_MEMBERSHIP_CATEGORY,
-            URL_FIELD_NAME
+            VALID_MEMBERSHIP_CATEGORY
         );
         Test.stopTest();
 
@@ -208,8 +222,7 @@ private class CommunityPunchPassesController_Test {
         List<Contact> lstCtsWithActiveMems = new List<Contact>();
         lstCtsWithActiveMems = CommunityPunchPassesController.getActivePunchPassesByContact(
             acc.Id,
-            null,
-            URL_FIELD_NAME
+            null
         );
         Test.stopTest();
 
@@ -238,6 +251,108 @@ private class CommunityPunchPassesController_Test {
             lstCtsWithActiveMems.size(),
             'Should have received no memberships'
         );
+    }
+
+    @isTest
+    static void testGetAssignedStaffAvailability() {
+        // Create staff contact and staff record
+        Contact ct = TestDataFactory.createContacts(1).get(0);
+        insert ct;
+        TREX1__Staff__c staff = TestDataFactory.createStaffFromContacts(
+            new List<Contact>{ ct }
+        ).get(0);
+        insert staff;
+        
+        TREX1__Membership_Type__c memType = [
+            SELECT Id, Appointment_Length__c, TREX1__Location__c
+              FROM TREX1__Membership_Type__c
+             LIMIT 1
+        ];
+        
+        insert new Assigned_Staff__c(
+            Staff__c = staff.Id, 
+            Membership_Type__c = memType.Id
+        );
+        
+        List<Staff_Availability_Schedule__c> lstSchedules = TestDataFactory.createAvailabilityForConsecutiveDays(
+            staff, 
+            Date.today(), 
+            Time.newInstance(9, 0, 0, 0), 
+            Time.newInstance(15, 0, 0, 0), 
+            memType.TREX1__Location__c, 
+            5
+        );
+        insert lstSchedules;
+        
+        Test.startTest();
+        List<StaffAvailabilityWrapper> lstWrappers = new List<StaffAvailabilityWrapper>();
+        lstWrappers = CommunityPunchPassesController.getAssignedStaffAvailability(
+            memType.Id, 
+            memType.TREX1__Location__c, 
+            Integer.valueOf(memType.Appointment_Length__c)
+        );
+        Test.stopTest();
+
+        System.assert(
+            !lstWrappers.isEmpty(), 
+            'Should have returned a list of wrappers'
+        );
+        
+    }
+    
+    @isTest
+    static void testGetAppointmentsFromMembership() {
+        // Create staff contact and staff record
+        Contact ct = TestDataFactory.createContacts(1).get(0);
+        insert ct;
+        TREX1__Staff__c staff = TestDataFactory.createStaffFromContacts(
+            new List<Contact>{ ct }
+        ).get(0);
+        insert staff;
+        
+        TREX1__Membership_Type__c memType = [
+            SELECT Id, Appointment_Length__c, TREX1__Location__c
+              FROM TREX1__Membership_Type__c
+             LIMIT 1
+        ];
+        
+        insert new Assigned_Staff__c(
+            Staff__c = staff.Id, 
+            Membership_Type__c = memType.Id
+        );
+        
+        // Get membership
+        TREX1__Membership__c membership = [
+            SELECT Id, TREX1__Contact__c, TREX1__memb_Category__c, TREX1__memb_Type__c 
+              FROM TREX1__Membership__c 
+             WHERE TREX1__memb_Type__c = :memType.Id 
+             LIMIT 1
+        ];
+        
+        // Insert appointment
+        Appointment__c appt = new Appointment__c();
+        appt.Contact__c = membership.TREX1__Contact__c;
+        appt.Staff__c = staff.Id;
+        appt.Membership__c = membership.Id;
+        appt.Membership_Category__c = membership.TREX1__memb_Category__c;
+        appt.Membership_Type__c = membership.TREX1__memb_Type__c;
+        appt.Status__c = 'Scheduled';
+        appt.Start_DateTime__c = DateTime.now().addHours(1);
+        appt.End_DateTime__c = DateTime.now().addHours(2);
+        insert appt;
+        
+        Test.startTest();
+        List<Appointment__c> lstAppts = CommunityPunchPassesController.getAppointmentsFromMembership(
+            membership
+        );
+        Test.stopTest();
+        
+        System.assertEquals(
+            appt.Id, 
+            lstAppts[0].Id, 
+            'Should have returned the appointment for this membership'
+        );
+        
     }
 
 }
