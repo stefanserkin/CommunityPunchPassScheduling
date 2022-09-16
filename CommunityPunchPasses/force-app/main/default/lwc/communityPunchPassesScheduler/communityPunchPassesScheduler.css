@@ -1,0 +1,40 @@
+.sticky {
+
+    position: sticky;
+}
+
+.x-overflow {
+
+    overflow-x: auto;
+}
+
+.border-bottom {
+
+    border-bottom: 1px solid black;
+}
+
+.appointment-container {
+    margin: auto;
+    scroll-behavior: smooth;
+}
+
+
+/***************************************************/
+                    /* MEDIA */
+/***************************************************/
+@media only screen and (max-width: 600px) {
+    .day-column {
+        width: 100%;
+    }
+    /* css specificity hack for modal width override */
+    .confirmation-modal.mobile {
+        width: 90% !important;
+        max-width: 100% !important;
+    }
+}
+
+@media only screen and (max-width: 1000px) and (min-width: 600px) {
+    .day-column {
+        width: 33%;
+    }
+}

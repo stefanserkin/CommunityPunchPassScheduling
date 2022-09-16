@@ -62,7 +62,7 @@ export default class CommunityPunchPassesScheduler2 extends LightningElement {
                 hour: 'numeric', minute: 'numeric', hour12: true
             };
             const dateOptions = {
-                year: "numeric", month: "numeric", day: "numeric"
+                weekday: "long", year: "numeric", month: "numeric", day: "numeric"
             };
             rows.forEach(dataParse => {
                 // Add staff to list to later de-dupe for staff selection screen
@@ -70,6 +70,7 @@ export default class CommunityPunchPassesScheduler2 extends LightningElement {
                 lstStaffWithDuplicates.push(staff);
 
                 let d = new Date(dataParse.availabilityDate);
+                d.setDate(d.getDate() + 1);
                 dataParse.formattedDate = new Intl.DateTimeFormat('en-US', dateOptions).format(d);
                 
 				dataParse.availabilitySlots.forEach(slot => {
@@ -101,6 +102,12 @@ export default class CommunityPunchPassesScheduler2 extends LightningElement {
 
     bookAppointment(event) {
         this.isLoading = true;
+
+        // Guard against no credits available
+        if (this.punchPass.Bookable_Credits__c <= 0) {
+            alert(`You don't have any of those. Don't do that please. Owwwwwwww.`);
+            return;
+        }
         
         const newAppointmentStatus = 'Scheduled';
         this.appointmentStart = event.target.dataset.startTime;
@@ -129,7 +136,8 @@ export default class CommunityPunchPassesScheduler2 extends LightningElement {
                         variant: 'success'
                     })
                 );
-                refreshApex(this.wiredStaff);
+                // Not working punk. No data is refreshed here.
+                refreshApex(this.wiredAppointmentDays);
                 this.isLoading = false;
                 this.handleCloseEvent();
             })

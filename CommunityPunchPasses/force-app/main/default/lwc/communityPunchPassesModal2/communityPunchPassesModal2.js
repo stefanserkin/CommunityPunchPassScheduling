@@ -49,7 +49,7 @@ export default class CommunityPunchPassesModal2 extends LightningElement {
     selectedAppointmentId;
 
     get hasBookableAppointments() {
-        return true;
+        return this.punchPass.Bookable_Credits__c > 0 ? true : false;
     }
 
     get creditSummary() {

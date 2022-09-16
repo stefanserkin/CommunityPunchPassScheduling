@@ -322,6 +322,10 @@ export default class CommunityPunchPasses2 extends NavigationMixin(LightningElem
         return baseUrl;
     }
 
+	showHelpInfo() {
+		alert(`Click the dropdown arrow to the right of any row to access available actions. Download receipt, view appointment history, or schedule new appointments for an active package.`);
+	}
+
 	handleModalClose() {
         this.showModal = false;
 		if (this.showScheduler) {

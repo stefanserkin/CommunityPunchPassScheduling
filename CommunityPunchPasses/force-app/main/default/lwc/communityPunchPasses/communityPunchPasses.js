@@ -326,10 +326,10 @@ export default class CommunityPunchPasses extends NavigationMixin(LightningEleme
         this.showModal = false;
 		if (this.showScheduler) {
 			this.showScheduler = false;
-			this.isLoading = true;
-			this.refreshComponent();
-			this.isLoading = false;
 		}
+		this.isLoading = true;
+		this.refreshComponent();
+		this.isLoading = false;
     }
 
 	get targetBehavior() {

@@ -12,84 +12,118 @@ import STAFF_FIELD from '@salesforce/schema/Appointment__c.Staff__c';
 import STATUS_FIELD from '@salesforce/schema/Appointment__c.Status__c';
 import MEMBERSHIP_FIELD from '@salesforce/schema/Appointment__c.Membership__c';
 
-export default class CommunityPunchPassesScheduler extends LightningElement {
+export default class CommunityPunchPassesScheduler2 extends LightningElement {
     @api punchPass;
     @api membershipTypeId;
     @api locationId;
     @api appointmentLength;
+
     isLoading = false;
     error;
 
     showSelectStaff = true;
     showStaffSchedule = false;
+    showConfirmationModal = false;
 
-    wiredStaff = [];
     lstStaff;
+    selectedStaffId;
+    staffName;
 
-    selectedStaff;
-    // selectedStaff.staffId
-    // selectedStaff.staffName
-    // selectedStaff.availabilitySlots (array)
-    // selectedStaff.availabilitySlots[0].startTime
-    // selectedStaff.availabilitySlots[0].endTime
+    wiredAppointmentDays = [];
+    allAppointmentDays;
+
+    selectedStaffAppointmentDays;
 
     appointmentStart;
     appointmentEnd;
+
+    formattedappointmentStart;
+    formattedappointmentEnd;
+
+    formattedDate;
+
     newAppointmentId;
+    /*****************************************
+     * Returns array of dates with a nested array of availability slots
+     * Each day has a staffId and staffName to identify the staff member
+     * (Date) row.availabilityDate
+     * (String) row.staffId
+     * (String) row.staffName
+     * (Array) row.availabilitySlots
+     *      (DateTime) row.availabilitySlots[0].startTime
+     *      (DateTime) row.availabilitySlots[0].endTime
+     *****************************************/
 
     @wire(getAssignedStaffAvailability, { 
 		membershipTypeId: '$membershipTypeId', 
         locationId: '$locationId', 
         appointmentLength: '$appointmentLength'
-	}) wiredStaffMembers(result) {
+	}) wiredWrappers(result) {
 		this.isLoading = true;
-		this.wiredStaff = result;
+		this.wiredAppointmentDays = result;
 	
         if (result.data) {
 			let rows = JSON.parse( JSON.stringify(result.data) );
-            const options = {
-                year: 'numeric', month: 'numeric', day: 'numeric', 
-                hour: 'numeric', minute: 'numeric', second: 'numeric', 
-                hour12: true
+            let lstStaffWithDuplicates = [];
+            const timeOptions = {
+                hour: 'numeric', minute: 'numeric', hour12: true
+            };
+            const dateOptions = {
+                weekday: "long", year: "numeric", month: "numeric", day: "numeric", timeZone: 'UTC'
             };
             rows.forEach(dataParse => {
+                // Add staff to list to later de-dupe for staff selection screen
+                let staff = {staffId: dataParse.staffId, staffName: dataParse.staffName};
+                lstStaffWithDuplicates.push(staff);
+
+                // Format times and dates for rendering
+                dataParse.formattedDate = this.formatTime(dataParse.availabilityDate, dateOptions);
+                
 				dataParse.availabilitySlots.forEach(slot => {
                     if (slot.startTime) {
-                        // yyyy-mm-ddThh:mm:ss:mmmmZ
-                        let dt = new Date( slot.startTime );
-                        slot.formattedStartTime = new Intl.DateTimeFormat('en-US', options).format(dt);
+                        slot.formattedStartTime = this.formatTime(slot.startTime, timeOptions);
                     }
                     if (slot.endTime) {
-                        let dt = new Date( slot.endTime );
-                        slot.formattedEndTime = new Intl.DateTimeFormat('en-US', options).format(dt);
+                        slot.formattedEndTime = this.formatTime(slot.endTime, timeOptions);
                     }
                 })
 			});
-            this.lstStaff = rows;
+
+            // De-dupe staff list
+            const key = 'staffId';
+            this.lstStaff = [...new Map(lstStaffWithDuplicates.map(item => [item[key], item])).values()];
+
+            this.allAppointmentDays = rows;
             this.error = undefined;
 			this.isLoading = false;
         } else if (result.error) {
 			console.error(result.error);
             this.error = result.error;
-            this.lstStaff = undefined;
+            this.allAppointmentDays = undefined;
 			this.isLoading = false;
         }
     }
 
-    bookAppointment(event) {
+    bookAppointment() {
+
+        this.showConfirmationModal = false;
         this.isLoading = true;
+
+        
+        // Guard against no credits available
+        console.log(this.punchPass.Bookable_Credits__c)
+        if (this.punchPass.Bookable_Credits__c <=0 ) {
+            alert("This package does not have any remaining credits.");
+            return;
+        }
         
         const newAppointmentStatus = 'Scheduled';
-        this.appointmentStart = event.target.dataset.startTime;
-        let endTime = new Date(this.appointmentStart);
-        endTime.setMinutes(endTime.getMinutes() + this.appointmentLength);
-        this.appointmentEnd = endTime;
 
         const fields = {};
         fields[CONTACT_FIELD.fieldApiName] = this.punchPass.TREX1__Contact__c;
         fields[STARTDATE_FIELD.fieldApiName] = this.appointmentStart;
         fields[ENDDATE_FIELD.fieldApiName] = this.appointmentEnd;
-        fields[STAFF_FIELD.fieldApiName] = this.selectedStaff.staffId;
+        fields[STAFF_FIELD.fieldApiName] = this.selectedStaffId;
         fields[STATUS_FIELD.fieldApiName] = newAppointmentStatus;
         fields[MEMBERSHIP_FIELD.fieldApiName] = this.punchPass.Id;
         const recordInput = { 
@@ -106,7 +140,7 @@ export default class CommunityPunchPassesScheduler extends LightningElement {
                         variant: 'success'
                     })
                 );
-                refreshApex(this.wiredStaff);
+                refreshApex(this.wiredAppointmentDays);
                 this.isLoading = false;
                 this.handleCloseEvent();
             })
@@ -127,7 +161,11 @@ export default class CommunityPunchPassesScheduler extends LightningElement {
     }
 
     goToStaffSchedule(event) {
-        this.selectedStaff = this.lstStaff.find(staff => staff.staffId === event.target.dataset.recordId);
+
+        this.selectedStaffId = event.target.dataset.recordId;
+        this.staffName = this.getStaffName(this.selectedStaffId);
+
+        this.selectedStaffAppointmentDays = this.allAppointmentDays.filter(appt => appt.staffId === this.selectedStaffId);
         this.showSelectStaff = false;
         this.showStaffSchedule = true;
     }
@@ -140,6 +178,58 @@ export default class CommunityPunchPassesScheduler extends LightningElement {
     handleCloseEvent() {
         this.dispatchEvent(new CustomEvent('close'));
     }
+
+    onConfirmationCancel() {
+        this.showConfirmationModal = false;
+    }
+
+    onAppointmentSelect(event) {
+
+        this.showConfirmationModal = true;
+        this.appointmentStart = event.target.dataset.startTime;
+
+        const timeOptions = {
+            hour: 'numeric', minute: 'numeric', hour12: true
+        };
+        const dateOptions = {
+            weekday: "long", year: "numeric", month: "numeric", day: "numeric", timeZone: 'UTC'
+        };
+
+        this.formattedappointmentStart = this.formatTime(this.appointmentStart, timeOptions);
+        let endTime = new Date(this.appointmentStart);
+
+        this.formattedDate = this.formatTime(this.appointmentStart, dateOptions);
+        
+        endTime.setMinutes(endTime.getMinutes() + this.appointmentLength);
+        this.appointmentEnd = endTime;
+ 
+    }
+
+    onScrollForward() {
+        let appContainer = this.template.querySelector(".appointment-container");
+        appContainer.scrollLeft += appContainer.getBoundingClientRect().width;
+    }
+
+    onScrollBack() {
+        let appContainer = this.template.querySelector(".appointment-container");
+        appContainer.scrollLeft -= appContainer.getBoundingClientRect().width;
+    }
+
+    /////////////////////////////////////////////
+    //                  Utils
+    /////////////////////////////////////////////
+
+    formatTime(date, options) {
+        let dt = new Date( date );
+        return new Intl.DateTimeFormat('en-US', options).format(dt);
+    }
+
+    getStaffName(id) {
+        for (let i = 0; i < this.lstStaff.length; i++) {
+            if (this.lstStaff[i].staffId == id) return this.lstStaff[i].staffName;
+        }
+    }
+
 
 
 }
