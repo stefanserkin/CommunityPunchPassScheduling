@@ -123,7 +123,6 @@ export default class CommunityPunchPassesModal extends LightningElement {
         this.selectedAppointmentId = event.detail.row.Id;
 
         let today = new Date().toISOString().slice(0, 10);
-        console.log('::::: today : ' + today);
         
         const fields = {};
         fields[ID_FIELD.fieldApiName] = this.selectedAppointmentId;

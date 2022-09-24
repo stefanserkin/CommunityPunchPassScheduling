@@ -111,9 +111,14 @@ export default class CommunityPunchPassesScheduler2 extends LightningElement {
 
         
         // Guard against no credits available
-        console.log(this.punchPass.Bookable_Credits__c)
-        if (this.punchPass.Bookable_Credits__c <=0 ) {
-            alert("This package does not have any remaining credits.");
+        if (this.punchPass.Bookable_Credits__c <= 0) {
+            this.dispatchEvent(
+                new ShowToastEvent({
+                    title: 'No credits remaining',
+                    message: 'There are no bookable credits remaining for this package',
+                    variant: 'error'
+                })
+            );
             return;
         }
         
@@ -147,21 +152,27 @@ export default class CommunityPunchPassesScheduler2 extends LightningElement {
             .catch((error => {
                 console.error(error);
                 this.error = error;
+                let message = '';
+                if (error.body.output.errors) {
+                    message = error.body.output.errors[0].message;
+                }
                 this.dispatchEvent(
                     new ShowToastEvent({
-                        title: 'Error creating record',
-                        message: 'Something went wrong. Please refresh the page and try again',
+                        title: 'Error creating appointment',
+                        message: message,
                         variant: 'error'
                     })
                 );
+                refreshApex(this.wiredAppointmentDays);
+                this.selectedStaffAppointmentDays = this.allAppointmentDays.filter(appt => appt.staffId === this.selectedStaffId);
                 this.isLoading = false;
+                this.showConfirmationModal = false;
                 this.handleCloseEvent();
             }))
 
     }
 
     goToStaffSchedule(event) {
-
         this.selectedStaffId = event.target.dataset.recordId;
         this.staffName = this.getStaffName(this.selectedStaffId);
 
