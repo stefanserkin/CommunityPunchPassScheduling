@@ -157,6 +157,10 @@ export default class CommunityPunchPasses extends NavigationMixin(LightningEleme
 		return this.numHouseholdCompletedPunchPasses != null && this.numHouseholdCompletedPunchPasses > 0 ? true : false;
 	}
 
+	get helpInfoContent() {
+		return `Click the dropdown arrow to the right of any row to access available actions. Download receipt, view appointment history, or schedule new appointments for an active package.`;
+	}
+
 	@wire(getRecord, {
 		recordId: USER_ID,
 		fields: [CONTACTID_FIELD, ACCOUNTID_FIELD, ACCOUNTNAME_FIELD]
@@ -278,6 +282,7 @@ export default class CommunityPunchPasses extends NavigationMixin(LightningEleme
 		this.selectedMembershipTypeId = row.TREX1__memb_Type__c;
 		this.selectedLocationId = row.TREX1__memb_Type__r.TREX1__Location__c;
 		this.selectedAppointmentLength = row.TREX1__memb_Type__r.Appointment_Length__c;
+		this.selectedPunchPassId = row.Id;
 		this.showScheduler = true;
 	}
 
@@ -314,6 +319,7 @@ export default class CommunityPunchPasses extends NavigationMixin(LightningEleme
 		this.selectedMembershipTypeId = row.TREX1__memb_Type__c;
 		this.selectedLocationId = row.TREX1__memb_Type__r.TREX1__Location__c;
 		this.selectedAppointmentLength = row.TREX1__memb_Type__r.Appointment_Length__c;
+		this.selectedPunchPassId = row.Id;
 		this.showModal = true;
 	}
 

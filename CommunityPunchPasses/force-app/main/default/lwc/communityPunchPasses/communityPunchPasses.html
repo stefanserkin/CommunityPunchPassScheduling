@@ -16,6 +16,7 @@
 			membership-type-id={selectedMembershipTypeId} 
 			location-id={selectedLocationId} 
 			appointment-length={selectedAppointmentLength}
+			punch-pass-id={selectedPunchPassId}
             onclose={handleModalClose}
         ></c-community-punch-passes-scheduler>
     </template>
@@ -42,8 +43,10 @@
 			alternative-text="Refresh Component" 
 			title="Refresh"
 			onclick={refreshComponent}
+			class="slds-var-m-right_small" 
 		><label></label>
 		</lightning-button-icon>
+		<lightning-helptext slot="actions" content={helpInfoContent}></lightning-helptext>
 
 		<!-- SPINNER ON LOAD -->
 		<lightning-spinner 

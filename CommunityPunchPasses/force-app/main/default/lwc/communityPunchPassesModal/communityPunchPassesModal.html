@@ -25,10 +25,54 @@
                 </div>
 
                 <template if:false={isLoading}>
-                    <p class="slds-text-heading_small slds-var-m-around_medium">
-                        {creditSummary}
-                    </p>
 
+                    <template if:true={hasScheduledAppointments}>
+                        <h3 class="slds-text-heading_medium slds-var-m-around_large slds-align_absolute-center">Scheduled Appointments</h3>
+                        <div class="slds-table_col-bordered slds-table_bordered" style={setScheduledDatatableHeight}>
+                            <lightning-datatable
+                                data={scheduledAppointments} 
+                                columns={scheduledCols} 
+                                key-field="Id" 
+                                column-widths-mode="auto" 
+                                resize-column-disabled 
+                                hide-checkbox-column 
+                                onrowaction={handleCancelAppointment}
+                            ></lightning-datatable>
+                        </div>
+                    </template>
+                    
+
+                    <template if:true={hasCompleteAppointments}>
+                        <h3 class="slds-text-heading_medium slds-var-m-around_large slds-align_absolute-center">Complete Appointments</h3>
+                        <div class="slds-table_col-bordered slds-table_bordered" style={setCompleteDatatableHeight}>
+                            <lightning-datatable
+                                data={completeAppointments} 
+                                columns={completeCols} 
+                                key-field="Id" 
+                                column-widths-mode="auto" 
+                                resize-column-disabled 
+                                hide-checkbox-column 
+                                onrowaction={handleCancelAppointment}
+                            ></lightning-datatable>
+                        </div>
+                    </template>
+
+                    <template if:true={hasCancelledAppointments}>
+                        <h3 class="slds-text-heading_medium slds-var-m-around_large slds-align_absolute-center">Cancelled Appointments</h3>
+                        <div class="slds-table_col-bordered slds-table_bordered" style={setCancelledDatatableHeight}>
+                            <lightning-datatable
+                                data={cancelledAppointments} 
+                                columns={cancelledCols} 
+                                key-field="Id" 
+                                column-widths-mode="auto" 
+                                resize-column-disabled 
+                                hide-checkbox-column 
+                                onrowaction={handleCancelAppointment}
+                            ></lightning-datatable>
+                        </div>
+                    </template>
+
+                    <!--
                     <lightning-datatable
                         data={appointments} 
                         columns={cols} 
@@ -38,7 +82,7 @@
                         hide-checkbox-column 
                         onrowaction={handleCancelAppointment}
                     ></lightning-datatable>
-
+                -->
                 </template>
             </div>
             <footer class="slds-modal__footer">

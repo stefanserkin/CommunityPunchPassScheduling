@@ -1,0 +1,45 @@
+<template>
+
+    <div class="slds-grid slds-gutters">
+        <div class="slds-col">
+            <lightning-button 
+                if:true={hasAppointmentsToSchedule}
+                variant="brand-outline" 
+                label="Schedule Appointment" 
+                title="Schedule Appointment" 
+                onclick={handleOpenScheduler} 
+                class="slds-m-left_medium"
+            ></lightning-button>
+        </div>
+        <div class="slds-col">
+            <lightning-button 
+                variant="destructive-text" 
+                label="Cancel Appointment" 
+                title="Cancel Appointment" 
+                onclick={handleOpenCancelModal} 
+                class="slds-m-left_medium"
+            ></lightning-button>
+        </div>
+    </div>
+
+    <template if:true={showScheduler}>
+        <c-community-punch-passes-scheduler
+            punch-pass={membership} 
+            membership-type-id={membershipTypeId} 
+            location-id={locationId} 
+            appointment-length={appointmentLength}
+            punch-pass-id={membership.Id}
+            onclose={handleModalClose}
+        ></c-community-punch-passes-scheduler>
+    </template>
+
+    <template if:true={showCancelModal}>
+        <c-community-punch-passes-modal
+			punch-pass={membership} 
+			cancellation-hours-notice={cancellationHoursNotice} 
+            onclose={handleModalClose} 
+			ongotoscheduler={handleOpenScheduler}
+        ></c-community-punch-passes-modal>
+    </template>
+    
+</template>

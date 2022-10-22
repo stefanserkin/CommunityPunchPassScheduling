@@ -12,11 +12,12 @@ import STAFF_FIELD from '@salesforce/schema/Appointment__c.Staff__c';
 import STATUS_FIELD from '@salesforce/schema/Appointment__c.Status__c';
 import MEMBERSHIP_FIELD from '@salesforce/schema/Appointment__c.Membership__c';
 
-export default class CommunityPunchPassesScheduler2 extends LightningElement {
+export default class CommunityPunchPassesScheduler extends LightningElement {
     @api punchPass;
     @api membershipTypeId;
     @api locationId;
     @api appointmentLength;
+    @api punchPassId;
 
     isLoading = false;
     error;
@@ -54,10 +55,62 @@ export default class CommunityPunchPassesScheduler2 extends LightningElement {
      *      (DateTime) row.availabilitySlots[0].endTime
      *****************************************/
 
+     @wire(getAssignedStaffAvailability, { 
+		punchPassId: '$punchPassId'
+	}) wiredWrappers(result) {
+		this.isLoading = true;
+		this.wiredAppointmentDays = result;
+
+        console.log(this.punchPassId);
+	
+        if (result.data) {
+			let rows = JSON.parse( JSON.stringify(result.data) );
+            let lstStaffWithDuplicates = [];
+            const timeOptions = {
+                hour: 'numeric', minute: 'numeric', hour12: true
+            };
+            const dateOptions = {
+                weekday: "long", year: "numeric", month: "numeric", day: "numeric", timeZone: 'UTC'
+            };
+            rows.forEach(dataParse => {
+                // Add staff to list to later de-dupe for staff selection screen
+                let staff = {staffId: dataParse.staffId, staffName: dataParse.staffName};
+                lstStaffWithDuplicates.push(staff);
+
+                // Format times and dates for rendering
+                dataParse.formattedDate = this.formatTime(dataParse.availabilityDate, dateOptions);
+                
+				dataParse.availabilitySlots.forEach(slot => {
+                    if (slot.startTime) {
+                        slot.formattedStartTime = this.formatTime(slot.startTime, timeOptions);
+                    }
+                    if (slot.endTime) {
+                        slot.formattedEndTime = this.formatTime(slot.endTime, timeOptions);
+                    }
+                })
+			});
+
+            // De-dupe staff list
+            const key = 'staffId';
+            this.lstStaff = [...new Map(lstStaffWithDuplicates.map(item => [item[key], item])).values()];
+
+            this.allAppointmentDays = rows;
+            this.error = undefined;
+			this.isLoading = false;
+        } else if (result.error) {
+			console.error(result.error);
+            this.error = result.error;
+            this.allAppointmentDays = undefined;
+			this.isLoading = false;
+        }
+    }
+
+    /*
     @wire(getAssignedStaffAvailability, { 
 		membershipTypeId: '$membershipTypeId', 
         locationId: '$locationId', 
-        appointmentLength: '$appointmentLength'
+        appointmentLength: '$appointmentLength', 
+        appointmentInterval: '$appointmentInterval'
 	}) wiredWrappers(result) {
 		this.isLoading = true;
 		this.wiredAppointmentDays = result;
@@ -103,12 +156,12 @@ export default class CommunityPunchPassesScheduler2 extends LightningElement {
 			this.isLoading = false;
         }
     }
+    */
 
     bookAppointment() {
 
         this.showConfirmationModal = false;
         this.isLoading = true;
-
         
         // Guard against no credits available
         if (this.punchPass.Bookable_Credits__c <= 0) {
