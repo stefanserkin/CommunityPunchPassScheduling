@@ -18,6 +18,39 @@ public without sharing class CommunityPunchPassesController {
 
     @AuraEnabled(cacheable=true)
     public static List<StaffAvailabilityWrapper> getAssignedStaffAvailability(
+        String punchPassId
+    ){
+        // Get punch pass with configuration settings
+        TREX1__Membership__c punchPass = getPunchPassById(punchPassId);
+
+        // Create list of wrappers
+        List<StaffAvailabilityWrapper> lstWrappers = new List<StaffAvailabilityWrapper>();
+
+        // Query for staff with upcoming availability and appts
+        List<TREX1__Staff__c> lstStaff = getAssignedStaff(
+            punchPass.TREX1__memb_Type__c, 
+            punchPass.TREX1__memb_Type__r.TREX1__Location__c
+        );
+        
+        // Remove appointments from available times and
+        // return wrapper of staff with availability
+        for (TREX1__Staff__c staff : lstStaff) {
+            StaffAvailabilityWrapper saw = new StaffAvailabilityWrapper();
+            lstWrappers.addAll(
+                StaffAvailabilityWrapperService.getWrappersFromStaff(
+                    staff, 
+                    punchPass
+                )
+            );
+        }
+
+        return lstWrappers;
+
+    }
+
+    /*
+    @AuraEnabled(cacheable=true)
+    public static List<StaffAvailabilityWrapper> getAssignedStaffAvailability(
         String membershipTypeId, 
         String locationId, 
         Integer appointmentLength
@@ -45,6 +78,61 @@ public without sharing class CommunityPunchPassesController {
 
         return lstWrappers;
 
+    }
+    */
+
+    /**********************************
+     * Get punch pass details from record page or single id scenario
+     * @param String membership id
+     * @return TREX1__Membership__c punch pass
+     ***********************************/
+
+    @AuraEnabled(cacheable=true)
+    public static TREX1__Membership__c getPunchPassById(
+        String membershipId
+    ){
+        try {
+            return [
+                SELECT Id, Name, TREX1__Contact__c, TREX1__Contact__r.Name, TREX1__Contact__r.FirstName, 
+                       TREX1__memb_Type__c, TREX1__memb_Type__r.Name, TREX1__Type__c, 
+                       TREX1__memb_Type__r.TREX1__Location__c, TREX1__memb_Type__r.Appointment_Length__c, 
+                       TREX1__memb_Type__r.Cancellation_Hours_Notice_Required__c, TREX1__Category_Name__c,
+                       TREX1__memb_Category__r.Minimum_Days_Between_Appointments__c, 
+                       TREX1__memb_Category__r.Maximum_Monthly_Appointments__c,
+                       TREX1__memb_Category__r.Required_Hours_Notice__c, 
+                       TREX1__memb_Category__r.Appointment_Time_Slot_Interval__c,
+                       TREX1__Account__r.Name, TREX1__Start_Date__c, TREX1__End_Date__c, TREX1__Status__c, 
+                       TREX1__Purchasing_Transaction__c, TREX1__Remaining_Value__c, 
+                       TREX1__Stored_Value__c, TREX1__Total_Value__c, Effectively_Used_Credits__c, 
+                       Bookable_Credits__c, CreatedDate, 
+                       (SELECT Id, Name, Start_DateTime__c, End_DateTime__c, 
+                               Status__c, Attended__c, Staff__c, Staff__r.Name, 
+                               Cancellation_Date__c, Membership_Category__c
+                          FROM Appointments__r
+                         WHERE Status__c NOT IN ('Draft','Cancelled'))
+                  FROM TREX1__Membership__c
+                 WHERE Id = :membershipId
+                 LIMIT 1
+            ];
+        } catch (Exception e) {
+            throw new AuraHandledException(e.getMessage());
+        }
+    }
+
+    @AuraEnabled(cacheable=true)
+    public static List<Appointment__c> getAppointmentsByContactAndCategory(
+        String contactId, 
+        String membershipCategoryId
+    ) {
+        return [
+            SELECT Id, Name, Start_DateTime__c, End_DateTime__c, 
+                   Status__c, Attended__c, Staff__c, Staff__r.Name, 
+                   Cancellation_Date__c, Membership_Category__c
+              FROM Appointment__c
+             WHERE Contact__c = :contactId
+               AND Membership_Category__c = :membershipCategoryId
+               AND Status__c NOT IN ('Draft','Cancelled')
+        ];
     }
 
     /**********************************
@@ -131,15 +219,16 @@ public without sharing class CommunityPunchPassesController {
     ) {
         return [
             SELECT Id, Name, Start_DateTime__c, End_DateTime__c, 
-                   Status__c, Attended__c, Staff__c, Staff__r.Name
+                   Status__c, Attended__c, Staff__c, Staff__r.Name, 
+                   Cancellation_Date__c, Membership_Category__c,  
+                   Membership_Category__r.Minimum_Days_Between_Appointments__c
               FROM Appointment__c
              WHERE Membership__c = :membership.Id
                AND Status__c != 'Draft'
-             ORDER BY Start_DateTime__c DESC
+             ORDER BY Start_DateTime__c ASC
              LIMIT 10000
         ];
     }
-
 
     /**********************************
      * Query for receipt attachment id for a given transaction id
@@ -182,7 +271,7 @@ public without sharing class CommunityPunchPassesController {
             strMembershipCategoryNames
         );
         String strQuery = 'SELECT Id, FirstName, LastName, ';
-        strQuery += '(SELECT Id, Name, TREX1__Contact__c, TREX1__Contact__r.Name, TREX1__Contact__r.FirstName, TREX1__memb_Type__c, TREX1__memb_Type__r.Name, TREX1__Type__c, TREX1__memb_Type__r.TREX1__Location__c, TREX1__memb_Type__r.Appointment_Length__c, TREX1__Category_Name__c, TREX1__Status__c, TREX1__Account__r.Name, TREX1__Start_Date__c, TREX1__End_Date__c, TREX1__Purchasing_Transaction__c, TREX1__Remaining_Value__c, TREX1__Stored_Value__c, TREX1__Total_Value__c, Effectively_Used_Credits__c, Bookable_Credits__c, CreatedDate';
+        strQuery += '(SELECT Id, Name, TREX1__Contact__c, TREX1__Contact__r.Name, TREX1__Contact__r.FirstName, TREX1__memb_Type__c, TREX1__memb_Type__r.Name, TREX1__Type__c, TREX1__memb_Type__r.TREX1__Location__c, TREX1__memb_Type__r.Cancellation_Hours_Notice_Required__c, TREX1__memb_Type__r.Appointment_Length__c, TREX1__Category_Name__c, TREX1__memb_Category__r.Minimum_Days_Between_Appointments__c, TREX1__memb_Category__r.Appointment_Time_Slot_Interval__c, TREX1__Status__c, TREX1__Account__r.Name, TREX1__Start_Date__c, TREX1__End_Date__c, TREX1__Purchasing_Transaction__c, TREX1__Remaining_Value__c, TREX1__Stored_Value__c, TREX1__Total_Value__c, Effectively_Used_Credits__c, Bookable_Credits__c, CreatedDate';
         strQuery += ' FROM TREX1__Memberships__r WHERE RecordType.DeveloperName = :PUNCH_PASS_RECORDTYPE_NAME' + 
             ' AND TREX1__Category_Name__c IN :lstMembershipCategoryNames' + 
             ' AND TREX1__Remaining_Value__c > 0 AND TREX1__Status__c != :MEMBERSHIP_STATUS_COMPLETE' + 

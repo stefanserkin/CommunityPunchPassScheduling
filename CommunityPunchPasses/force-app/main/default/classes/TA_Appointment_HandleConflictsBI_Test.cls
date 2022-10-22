@@ -79,7 +79,7 @@ private class TA_Appointment_HandleConflictsBI_Test {
         appt.Start_DateTime__c = DateTime.newInstance(Date.today().addDays(1), Time.newInstance(11, 0, 0, 0));
         appt.End_DateTime__c = appt.Start_DateTime__c.addHours(1);
         appt.Bypass_Staff_Auto_Emails__c = true;
-        appt.Bypass_Participant_Auto_Emails__c = true;
+        appt.Bypass_Customer_Auto_Emails__c = true;
         insert appt;
 
         // Create second appointment for insert
@@ -150,7 +150,7 @@ private class TA_Appointment_HandleConflictsBI_Test {
         appt.Start_DateTime__c = DateTime.newInstance(Date.today().addDays(1), Time.newInstance(11, 0, 0, 0));
         appt.End_DateTime__c = appt.Start_DateTime__c.addHours(1);
         appt.Bypass_Staff_Auto_Emails__c = true;
-        appt.Bypass_Participant_Auto_Emails__c = true;
+        appt.Bypass_Customer_Auto_Emails__c = true;
         insert appt;
 
         // Create second appointment for insert
@@ -209,7 +209,7 @@ private class TA_Appointment_HandleConflictsBI_Test {
         appt.Start_DateTime__c = DateTime.newInstance(Date.today().addDays(1), Time.newInstance(11, 0, 0, 0));
         appt.End_DateTime__c = appt.Start_DateTime__c.addHours(1);
         appt.Bypass_Staff_Auto_Emails__c = true;
-        appt.Bypass_Participant_Auto_Emails__c = true;
+        appt.Bypass_Customer_Auto_Emails__c = true;
         insert appt;
 
         // Create second appointment for insert
