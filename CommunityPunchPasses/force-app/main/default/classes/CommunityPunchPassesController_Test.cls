@@ -161,6 +161,22 @@ private class CommunityPunchPassesController_Test {
     }
     
     @isTest
+    static void testGetPunchPassById() {
+        
+        TREX1__Membership__c punchPass = [SELECT Id FROM TREX1__Membership__c LIMIT 1];
+
+        Test.startTest();
+        TREX1__Membership__c punchPassFromController = CommunityPunchPassesController.getPunchPassById(punchPass.Id);
+        Test.stopTest();
+
+        System.assert(
+            punchPassFromController != null,
+            'Should have returned the punch pass membership'
+        );
+
+    }
+    
+    @isTest
     static void testQueryForActivePunchPasses() {
         
         Account acc = [SELECT Id FROM Account LIMIT 1];
@@ -339,6 +355,8 @@ private class CommunityPunchPassesController_Test {
         appt.Status__c = 'Scheduled';
         appt.Start_DateTime__c = DateTime.now().addHours(1);
         appt.End_DateTime__c = DateTime.now().addHours(2);
+        appt.Bypass_Staff_Auto_Emails__c = true;
+        appt.Bypass_Customer_Auto_Emails__c = true;
         insert appt;
         
         Test.startTest();

@@ -11,5 +11,10 @@
         <minorNumber>10</minorNumber>
         <namespace>npe5</namespace>
     </packageVersions>
+    <packageVersions>
+        <majorNumber>1</majorNumber>
+        <minorNumber>29</minorNumber>
+        <namespace>pmdm</namespace>
+    </packageVersions>
     <status>Active</status>
 </ApexClass>

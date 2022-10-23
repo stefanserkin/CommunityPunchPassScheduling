@@ -7,8 +7,9 @@ public with sharing class StaffAvailabilityWrapperService {
     private static Integer requiredHoursNotice;
     private static Datetime roundedCurrentTime;
     private static Set<String> maxedOutMonths;
-    private static TREX1__Membership__c punchPass;
-    private static List<Appointment__c> lstExistingAppointments;
+    
+    @testVisible private static TREX1__Membership__c punchPass;
+    @testVisible private static List<Appointment__c> lstExistingAppointments;
 
     /**********************************
      * Returns wrapper with staff id, name, and availability slots
@@ -59,7 +60,7 @@ public with sharing class StaffAvailabilityWrapperService {
      * Required_Hours_Notice__c - Minimum hours-notice needed to schedule an appointment
      ***********************************/
 
-    public static void initializeAppointmentConfig() {
+    private static void initializeAppointmentConfig() {
         appointmentIntervalInMinutes = 
             punchPass.TREX1__memb_Category__r.Appointment_Time_Slot_Interval__c != null ? 
             Integer.valueOf( punchPass.TREX1__memb_Category__r.Appointment_Time_Slot_Interval__c ) :
@@ -302,11 +303,18 @@ public with sharing class StaffAvailabilityWrapperService {
      * @return String Month key
      **********************************/
 
+    @testVisible
     private static String getMonthKey(
         DateTime dtValue
     ) {
         return String.valueOf(dtValue.month()) + String.valueOf(dtValue.year());
     }
+    
+    /**********************************
+     * Cache and return collection of complete and scheduled appointments for this
+     *   membership category and contact
+     * @return Appointment__c[] list of appointments
+     **********************************/
 
     private static List<Appointment__c> getExistingAppointments() {
         if (lstExistingAppointments == null) {

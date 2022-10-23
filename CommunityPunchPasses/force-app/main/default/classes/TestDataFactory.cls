@@ -14,6 +14,7 @@ public class TestDataFactory {
     private static Id standardTransactionRecTypeId;
     private static Id punchPassRecTypeId;
     private static Id membershipTypePunchPassRecTypeId;
+    private static Id membershipCategoryPunchPassRecTypeId;
     
     /***********************************
      * Constants
@@ -38,6 +39,9 @@ public class TestDataFactory {
     private static final String RENTAL_BOOKING_TYPE = 'Rental';
     private static final String ADMIN_BOOKING_TYPE = 'Administrative';
     private static final String CALCULATION_MODE_AUTOMATIC = 'Automatic';
+    // Community Programs (pmdm)
+    private static final String COMMUNITY_PROGRAM_BASE_NAME = 'Test Program';
+    private static final String COMMUNITY_PROGRAM_STATUS_ACTIVE = 'Active';
     // Contacts
     private static final String CONTACT_BASE_FIRST_NAME = 'David';
     private static final String CONTACT_BASE_MIDDLE_NAME = 'Captain';
@@ -58,7 +62,6 @@ public class TestDataFactory {
     private static final String VALID_MEMBERSHIP_CATEGORY = 'Pilates';
     private static final String MEMBERSHIP_STATUS_ACTIVE = 'Active';
     private static final String MEMBERSHIP_STATUS_COMPLETE = 'Complete';
-
     // Membership Categories
     private static final String MEMBERSHIP_CATEGORY_BASE_NAME = 'Test Membership Category';
     // Programs
@@ -75,6 +78,17 @@ public class TestDataFactory {
     // Scheduled Rules
     private static final String SCHEDULED_RULE_BASE_NAME = 'Test Scheduled Rule';
     private static final String SCHEDULED_RULE_DESCRIPTION = 'A scheduled rule for testing';
+    // Services (pmdm)
+    private static final String SERVICE_BASE_NAME = 'Test Service';
+    private static final String SERVICE_STATUS_ACTIVE = 'Active';
+    private static final String SERVICE_ATTENDANCE_FIELD_SET = 'Attendance_Service_Deliveries';
+    private static final String SERVICE_BULK_DELIVERY_FIELD_SET = 'Bulk_Service_Deliveries';
+    private static final String SERVICE_UNIT_OF_MEASUREMENT = 'Hours';
+    // Service Schedules (pmdm)
+    private static final String SERVICE_SCHEDULE_BASE_NAME = 'Test Schedule';
+    private static final Integer SERVICE_SCHEDULE_DEFAULT_SERVICE_QUANTITY = 1;
+    // Service Participants (pmdm)
+    private static final String SERVICE_PARTICIPANT_STATUS_ENROLLED = 'Enrolled';
     // Staff
     private static final String STAFF_NAME = 'Ince Structor';
     // Transactions (TREX1)
@@ -363,6 +377,33 @@ public class TestDataFactory {
         return lstBookings;
     }
 
+    /***********************************
+     * Community Programs (pmdm)
+     ***********************************/
+
+    /**
+     * Create community program sObjects
+     * Object renamed from PMM managed package (Program)
+     * No DML - returns unsaved list of sObjects
+     * @param Integer Number of programs to create
+     */
+
+    public static List<pmdm__Program__c> createCommunityPrograms(
+        Integer numberOfPrograms
+    ) {
+        List<pmdm__Program__c> lstCommunityPrograms = new List<pmdm__Program__c>();
+        for (Integer i = 0; i < numberOfPrograms; i++) {
+            lstCommunityPrograms.add(
+                new pmdm__Program__c(
+                    Name = COMMUNITY_PROGRAM_BASE_NAME + String.valueOf(i), 
+                    pmdm__StartDate__c = Date.today().addMonths(-1), 
+                    pmdm__EndDate__c = Date.today().addMonths(1), 
+                    pmdm__Status__c = COMMUNITY_PROGRAM_STATUS_ACTIVE
+                )
+            );
+        }
+        return lstCommunityPrograms;
+    }
 
     /***********************************
      * Contacts
@@ -632,11 +673,15 @@ public class TestDataFactory {
         if (punchPassRecTypeId == null) {
             punchPassRecTypeId = getPunchPassRecordTypeId();
         }
+        
+        Id categoryId = [SELECT TREX1__Category__c FROM TREX1__Membership_Type__c WHERE Id = :membershipTypeId LIMIT 1].TREX1__Category__c;
+        
         return new TREX1__Membership__c(
                 TREX1__Contact__c = contact.Id, 
                 TREX1__Account__c = accountId, 
                 RecordTypeId = punchPassRecTypeId, 
                 TREX1__memb_Type__c = membershipTypeId, 
+        		TREX1__memb_Category__c = categoryId, 
                 TREX1__Status__c = MEMBERSHIP_STATUS_ACTIVE, 
                 TREX1__Category_Name__c = VALID_MEMBERSHIP_CATEGORY, 
                 TREX1__Start_Date__c = Date.today().addDays(-1), 
@@ -650,10 +695,13 @@ public class TestDataFactory {
      */
 
     private static Id getPunchPassRecordTypeId() {
-        return Schema.SObjectType.TREX1__Membership__c.getRecordTypeInfosByDeveloperName().get('Punch_Pass_Membership').getRecordTypeId();
+        if (punchPassRecTypeId == null) {
+            punchPassRecTypeId = Schema.SObjectType.TREX1__Membership__c.getRecordTypeInfosByDeveloperName().get('Punch_Pass_Membership').getRecordTypeId();
+        }
+        return punchPassRecTypeId;
     }
 
-
+    
     /***********************************
      * Membership Categories (TREX1)
      ***********************************/
@@ -673,6 +721,30 @@ public class TestDataFactory {
                 new TREX1__Membership_Category__c(
                     Name = VALID_MEMBERSHIP_CATEGORY,
                     TREX1__Available_For_Purchase__c = true
+                )
+            );
+        }
+        return lstMembershipCategories;
+    }
+
+    public static List<TREX1__Membership_Category__c> createPunchPassMembershipCategories(
+        Integer numberOfMembershipCategories
+    ) {
+        List<TREX1__Membership_Category__c> lstMembershipCategories = new List<TREX1__Membership_Category__c>();
+
+        if (membershipCategoryPunchPassRecTypeId == null) {
+            membershipCategoryPunchPassRecTypeId = Schema.SObjectType.TREX1__Membership_Category__c.getRecordTypeInfosByDeveloperName().get('Punch_Pass').getRecordTypeId();
+        }
+
+        for (Integer i = 0; i < numberOfMembershipCategories; i++) {
+            lstMembershipCategories.add(
+                new TREX1__Membership_Category__c(
+                    Name = VALID_MEMBERSHIP_CATEGORY,
+                    TREX1__Available_For_Purchase__c = true, 
+                    Maximum_Monthly_Appointments__c = 2, 
+                    Minimum_Days_Between_Appointments__c = 2, 
+                    Required_Hours_Notice__c = 1, 
+                    Appointment_Time_Slot_Interval__c = 30
                 )
             );
         }
@@ -709,7 +781,7 @@ public class TestDataFactory {
                     new TREX1__Membership_Type__c(
                         Name = 'Mem Type ' + String.valueOf(i),
                         Appointment_Length__c = 60,
-                        RecordTypeId = membershipTypePunchPassRecTypeId, 
+                        RecordTypeId = membershipTypePunchPassRecTypeId,
                         TREX1__Available_For_Purchase__c = true, 
                         TREX1__Available_Online__c = true, 
                         TREX1__Can_Freeze__c = true, 
@@ -1007,6 +1079,99 @@ public class TestDataFactory {
     }
 
     /***********************************
+     * Services (pmdm)
+     ***********************************/
+
+    /**
+     * Create service sObjects for a community program
+     * No DML - returns unsaved list of sObjects
+     * @param pmdm__Program__c community program
+     * @param Integer Number of services to create
+     */
+
+    public static List<pmdm__Service__c> createServices(
+        pmdm__Program__c program, 
+        Integer numberOfServices
+    ) {
+        List<pmdm__Service__c> lstServices = new List<pmdm__Service__c>();
+        for (Integer i = 0; i < numberOfServices; i++) {
+            lstServices.add(
+                new pmdm__Service__c(
+                    Name = SERVICE_BASE_NAME + String.valueOf(i), 
+                    pmdm__Program__c = program.Id, 
+                    pmdm__Status__c = SERVICE_STATUS_ACTIVE, 
+                    pmdm__AttendanceFieldSet__c = SERVICE_ATTENDANCE_FIELD_SET, 
+                    pmdm__ServiceDeliveryFieldSet__c = SERVICE_BULK_DELIVERY_FIELD_SET, 
+                    pmdm__UnitOfMeasurement__c = SERVICE_UNIT_OF_MEASUREMENT
+                )
+            );
+        }
+        return lstServices;
+    }
+
+    /***********************************
+     * Service Schedules (pmdm)
+     ***********************************/
+
+    /**
+     * Create service schedule sObjects for a service
+     * No DML - returns unsaved list of sObjects
+     * @param pmdm__Service__c service
+     * @param Integer Number of service schedules to create
+     */
+
+    public static List<pmdm__ServiceSchedule__c> createServiceSchedules(
+        pmdm__Service__c service, 
+        Integer numberOfSchedules
+    ) {
+        List<pmdm__ServiceSchedule__c> lstSchedules = new List<pmdm__ServiceSchedule__c>();
+        for (Integer i = 0; i < numberOfSchedules; i++) {
+            lstSchedules.add(
+                new pmdm__ServiceSchedule__c(
+                    Name = SERVICE_SCHEDULE_BASE_NAME + String.valueOf(i), 
+                    pmdm__Service__c = service.Id, 
+                    pmdm__DefaultServiceQuantity__c = SERVICE_SCHEDULE_DEFAULT_SERVICE_QUANTITY, 
+                    pmdm__FirstSessionStart__c = DateTime.now(), 
+                    pmdm__FirstSessionEnd__c = DateTime.now().addHours(SERVICE_SCHEDULE_DEFAULT_SERVICE_QUANTITY)
+                )
+            );
+        }
+        return lstSchedules;
+    }
+
+    /***********************************
+     * Service Participants (pmdm)
+     ***********************************/
+
+    /**
+     * Create service participant sObjects for a service schedule
+     * No DML - returns unsaved list of sObjects
+     * @param pmdm__ServiceSchedule__c service schedule
+     * @param Contact[] list of contacts to enroll
+     */
+
+    public static List<pmdm__ServiceParticipant__c> createServiceParticipants(
+        pmdm__ServiceSchedule__c serviceSchedule, 
+        List<Contact> lstContacts
+    ) {
+        List<pmdm__ServiceParticipant__c> lstParticipants = new List<pmdm__ServiceParticipant__c>();
+        for (Contact ct : lstContacts) {
+            lstParticipants.add(
+                new pmdm__ServiceParticipant__c(
+                    Name = ct.FirstName + ' ' + ct.LastName + ' ' + serviceSchedule.Name, 
+                    pmdm__Contact__c = ct.Id, 
+                    pmdm__Service__c = serviceSchedule.pmdm__Service__c, 
+                    pmdm__ServiceSchedule__c = serviceSchedule.Id, 
+                    pmdm__SignUpDate__c = Date.today(), 
+                    pmdm__Status__c = SERVICE_PARTICIPANT_STATUS_ENROLLED, 
+                    Bypass_Auto_Emails__c = true
+                )
+            );
+        }
+        return lstParticipants;
+    }
+
+    /***********************************
      * Staff (TREX1)
      ***********************************/
 
@@ -1042,6 +1207,7 @@ public class TestDataFactory {
      * @param Date start date
      * @param Time start time
      * @param Time end time
+     * @param Id location id
      * @param Integer number of days
      */
 

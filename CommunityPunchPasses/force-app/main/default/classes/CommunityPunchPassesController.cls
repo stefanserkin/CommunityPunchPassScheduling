@@ -94,9 +94,9 @@ public without sharing class CommunityPunchPassesController {
         try {
             return [
                 SELECT Id, Name, TREX1__Contact__c, TREX1__Contact__r.Name, TREX1__Contact__r.FirstName, 
-                       TREX1__memb_Type__c, TREX1__memb_Type__r.Name, TREX1__Type__c, 
+                       TREX1__memb_Type__c, TREX1__memb_Type__r.Name, TREX1__Type__c, TREX1__Category_Name__c, 
                        TREX1__memb_Type__r.TREX1__Location__c, TREX1__memb_Type__r.Appointment_Length__c, 
-                       TREX1__memb_Type__r.Cancellation_Hours_Notice_Required__c, TREX1__Category_Name__c,
+                       TREX1__memb_Type__r.Cancellation_Hours_Notice_Required__c, TREX1__memb_Category__c, 
                        TREX1__memb_Category__r.Minimum_Days_Between_Appointments__c, 
                        TREX1__memb_Category__r.Maximum_Monthly_Appointments__c,
                        TREX1__memb_Category__r.Required_Hours_Notice__c, 
