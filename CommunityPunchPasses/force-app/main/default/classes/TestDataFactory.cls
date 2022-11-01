@@ -743,7 +743,8 @@ public class TestDataFactory {
                     TREX1__Available_For_Purchase__c = true, 
                     Maximum_Monthly_Appointments__c = 2, 
                     Minimum_Days_Between_Appointments__c = 2, 
-                    Required_Hours_Notice__c = 1, 
+                    Scheduling_Hours_Notice_Required__c = 1, 
+                    Cancellation_Hours_Notice_Required__c = 1, 
                     Appointment_Time_Slot_Interval__c = 30
                 )
             );

@@ -48,39 +48,6 @@ public without sharing class CommunityPunchPassesController {
 
     }
 
-    /*
-    @AuraEnabled(cacheable=true)
-    public static List<StaffAvailabilityWrapper> getAssignedStaffAvailability(
-        String membershipTypeId, 
-        String locationId, 
-        Integer appointmentLength
-    ) {
-        // Create list of wrappers
-        List<StaffAvailabilityWrapper> lstWrappers = new List<StaffAvailabilityWrapper>();
-
-        // Query for staff with upcoming availability and appts
-        List<TREX1__Staff__c> lstStaff = getAssignedStaff(
-            membershipTypeId, 
-            locationId
-        );
-
-        // Remove appointments from available times and
-        // return wrapper of staff with availability
-        for (TREX1__Staff__c staff : lstStaff) {
-            StaffAvailabilityWrapper saw = new StaffAvailabilityWrapper();
-            lstWrappers.addAll(
-                StaffAvailabilityWrapperService.getWrappersFromStaff(
-                    staff, 
-                    appointmentLength
-                )
-            );
-        }
-
-        return lstWrappers;
-
-    }
-    */
-
     /**********************************
      * Get punch pass details from record page or single id scenario
      * @param String membership id
@@ -98,9 +65,10 @@ public without sharing class CommunityPunchPassesController {
                        TREX1__memb_Type__r.TREX1__Location__c, TREX1__memb_Type__r.Appointment_Length__c, 
                        TREX1__memb_Type__r.Cancellation_Hours_Notice_Required__c, TREX1__memb_Category__c, 
                        TREX1__memb_Category__r.Minimum_Days_Between_Appointments__c, 
-                       TREX1__memb_Category__r.Maximum_Monthly_Appointments__c,
-                       TREX1__memb_Category__r.Required_Hours_Notice__c, 
-                       TREX1__memb_Category__r.Appointment_Time_Slot_Interval__c,
+                       TREX1__memb_Category__r.Maximum_Monthly_Appointments__c, 
+                       TREX1__memb_Category__r.Cancellation_Hours_Notice_Required__c, 
+                       TREX1__memb_Category__r.Scheduling_Hours_Notice_Required__c, 
+                       TREX1__memb_Category__r.Appointment_Time_Slot_Interval__c, 
                        TREX1__Account__r.Name, TREX1__Start_Date__c, TREX1__End_Date__c, TREX1__Status__c, 
                        TREX1__Purchasing_Transaction__c, TREX1__Remaining_Value__c, 
                        TREX1__Stored_Value__c, TREX1__Total_Value__c, Effectively_Used_Credits__c, 

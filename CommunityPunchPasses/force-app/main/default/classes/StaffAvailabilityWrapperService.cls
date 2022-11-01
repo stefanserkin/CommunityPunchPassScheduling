@@ -4,7 +4,8 @@ public with sharing class StaffAvailabilityWrapperService {
     private static Integer appointmentLength;
     private static Integer minimumDaysBetweenAppointments;
     private static Integer maxMonthlyAppointments;
-    private static Integer requiredHoursNotice;
+    private static Integer cancellationHoursNoticeRequired;
+    private static Integer schedulingHoursNoticeRequired;
     private static Datetime roundedCurrentTime;
     private static Set<String> maxedOutMonths;
     
@@ -49,28 +50,28 @@ public with sharing class StaffAvailabilityWrapperService {
      * Initialize static variables with configuration settings 
      *   from membership category and membership type
      * 
-     * Appointment_Time_Slot_Interval__c - Lapsed minutes between availability slots
      * Appointment_Length__c - Length of appointment in minutes
+     * Appointment_Time_Slot_Interval__c - Lapsed minutes between availability slots
      * Minimum_Days_Between_Appointments__c - Amount of days required between appointments. 
      *   Only show slots at least this many days from existing appointments for this
      *   membership category
      * Maximum_Monthly_Appointments__c - Do not display any slots for calendar months where the contact
      *   has reached the maximum monthly appointments for this category
-     * Maximum_Monthly_Appointments__c - Do not allow appointments for maxed out months
-     * Required_Hours_Notice__c - Minimum hours-notice needed to schedule an appointment
+     * Scheduling_Hours_Notice_Required__c - Minimum hours' notice needed to schedule an appointment
+     * Cancellation_Hours_Notice_Required__c - Minimum hours' notice needed to cancel an appointment
      ***********************************/
 
     private static void initializeAppointmentConfig() {
-        appointmentIntervalInMinutes = 
-            punchPass.TREX1__memb_Category__r.Appointment_Time_Slot_Interval__c != null ? 
-            Integer.valueOf( punchPass.TREX1__memb_Category__r.Appointment_Time_Slot_Interval__c ) :
-            30;
-        
         appointmentLength = 
             punchPass.TREX1__memb_Type__r.Appointment_Length__c != null ?
             Integer.valueOf( punchPass.TREX1__memb_Type__r.Appointment_Length__c ) :
             30;
-        
+
+        appointmentIntervalInMinutes = 
+            punchPass.TREX1__memb_Category__r.Appointment_Time_Slot_Interval__c != null ? 
+            Integer.valueOf( punchPass.TREX1__memb_Category__r.Appointment_Time_Slot_Interval__c ) :
+            30;
+                
         minimumDaysBetweenAppointments = 
             punchPass.TREX1__memb_Category__r.Minimum_Days_Between_Appointments__c != null ? 
             Integer.valueOf( punchPass.TREX1__memb_Category__r.Minimum_Days_Between_Appointments__c ) :
@@ -81,9 +82,14 @@ public with sharing class StaffAvailabilityWrapperService {
             setMaxedOutMonths();
         }
 
-        requiredHoursNotice = 
-            punchPass.TREX1__memb_Category__r.Required_Hours_Notice__c != null ?
-            Integer.valueOf( punchPass.TREX1__memb_Category__r.Required_Hours_Notice__c ) :
+        schedulingHoursNoticeRequired= 
+            punchPass.TREX1__memb_Category__r.Scheduling_Hours_Notice_Required__c != null ?
+            Integer.valueOf( punchPass.TREX1__memb_Category__r.Scheduling_Hours_Notice_Required__c ) :
+            0;
+
+        cancellationHoursNoticeRequired = 
+            punchPass.TREX1__memb_Category__r.Cancellation_Hours_Notice_Required__c != null ?
+            Integer.valueOf( punchPass.TREX1__memb_Category__r.Cancellation_Hours_Notice_Required__c ) :
             0;
         setEarliestAppointmentTime();
     }
@@ -341,7 +347,7 @@ public with sharing class StaffAvailabilityWrapperService {
             hour, 
             minute, 
             0
-        ).addHours(requiredHoursNotice);
+        ).addHours(schedulingHoursNoticeRequired);
     }
 
 }

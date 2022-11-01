@@ -133,7 +133,8 @@ private class StaffAvailabilityWrapperService_Test {
             Minimum_Days_Between_Appointments__c = null, 
             Maximum_Monthly_Appointments__c = null, 
             Appointment_Time_Slot_Interval__c = null, 
-            Required_Hours_Notice__c = null
+            Scheduling_Hours_Notice_Required__c = null, 
+            Cancellation_Hours_Notice_Required__c = null
         );
         update memCat;
         

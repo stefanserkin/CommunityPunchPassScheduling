@@ -279,9 +279,18 @@ private class CommunityPunchPassesController_Test {
         ).get(0);
         insert staff;
         
+        
         TREX1__Membership_Type__c memType = [
             SELECT Id, Appointment_Length__c, TREX1__Location__c
               FROM TREX1__Membership_Type__c
+             LIMIT 1
+        ];
+
+        // Get membership
+        TREX1__Membership__c membership = [
+            SELECT Id, TREX1__Contact__c, TREX1__memb_Category__c, TREX1__memb_Type__c 
+              FROM TREX1__Membership__c 
+             WHERE TREX1__memb_Type__c = :memType.Id 
              LIMIT 1
         ];
         
@@ -303,9 +312,7 @@ private class CommunityPunchPassesController_Test {
         Test.startTest();
         List<StaffAvailabilityWrapper> lstWrappers = new List<StaffAvailabilityWrapper>();
         lstWrappers = CommunityPunchPassesController.getAssignedStaffAvailability(
-            memType.Id, 
-            memType.TREX1__Location__c, 
-            Integer.valueOf(memType.Appointment_Length__c)
+            membership.Id
         );
         Test.stopTest();
 
@@ -369,6 +376,46 @@ private class CommunityPunchPassesController_Test {
             appt.Id, 
             lstAppts[0].Id, 
             'Should have returned the appointment for this membership'
+        );
+        
+    }
+    
+    @isTest
+    static void testGetAppointmentsByContactAndCategory() {
+        // Get membership category id from membership type
+        TREX1__Membership_Type__c memType = [
+            SELECT TREX1__Category__c
+              FROM TREX1__Membership_Type__c
+             LIMIT 1
+        ];
+        
+        // Get contact id from a valid membership
+        TREX1__Membership__c membership = [
+            SELECT TREX1__Contact__c
+              FROM TREX1__Membership__c 
+             WHERE TREX1__memb_Type__c = :memType.Id 
+             LIMIT 1
+        ];
+        
+        Test.startTest();
+        List<Appointment__c> lstAppointments = new List<Appointment__c>(); 
+        lstAppointments = CommunityPunchPassesController.getAppointmentsByContactAndCategory(
+            memType.TREX1__Category__c, 
+            membership.TREX1__Contact__c
+        );
+        Test.stopTest();
+        
+        List<Appointment__c> lstAppointmentsToVerify = [
+            SELECT Id
+              FROM Appointment__c
+             WHERE Contact__c = :membership.TREX1__Contact__c
+               AND Membership_Category__c = :memType.TREX1__Category__c
+        ];
+        
+        System.assertEquals(
+            lstAppointmentsToVerify.size(), 
+            lstAppointments.size(), 
+            'Received incorrect amount of appointments for contact and category'
         );
         
     }
