@@ -13,7 +13,7 @@ public with sharing class StaffAvailabilityWrapperService {
     @testVisible private static List<Appointment__c> lstExistingAppointments;
 
     /**********************************
-     * Returns wrapper with staff id, name, and availability slots
+     * @description Returns wrapper with staff id, name, and availability slots
      * @param TREX1__Staff__c staff record
      * @param Decimal length of individual appointments in minutes
      * @return StaffAvailabilityWrapper custom wrapper with availability slots
@@ -47,7 +47,7 @@ public with sharing class StaffAvailabilityWrapperService {
     }
 
     /**********************************
-     * Initialize static variables with configuration settings 
+     * @description Initialize static variables with configuration settings 
      *   from membership category and membership type
      * 
      * Appointment_Length__c - Length of appointment in minutes
@@ -95,7 +95,7 @@ public with sharing class StaffAvailabilityWrapperService {
     }
 
     /**********************************
-     * Returns map of appointments by date, used to sort conflicts with availability
+     * @description Returns map of appointments by date, used to sort conflicts with availability
      * @param TREX1__Staff__c staff record
      * @return Map<Date,List<Appointment__c>> map of appointments by date
      ***********************************/
@@ -126,7 +126,7 @@ public with sharing class StaffAvailabilityWrapperService {
     }
 
     /**********************************
-     * Loops through availability schedules and adds available
+     * @description Loops through availability schedules and adds available
      *   slots to wrapper
      * @param StaffAvailabilityWrapper wrapper object
      * @param Map<Date,List<Appointment__c>> map of booked appts for this date
@@ -143,7 +143,7 @@ public with sharing class StaffAvailabilityWrapperService {
 
         for (Staff_Availability_Schedule__c sas : lstSchedules) {
 
-            // Guard against maximum appointments in month
+            // Enforce maximum appointments in calendar month policy
             if (maxedOutMonths != null && maxedOutMonths.contains( getMonthKey(sas.Start_DateTime__c) )) {
                 continue;
             }
@@ -153,7 +153,7 @@ public with sharing class StaffAvailabilityWrapperService {
                 if( !validateMinimumNumberOfDaysPolicy(sas) ) continue;
             }
 
-            // Enforce scheduling hours notice required
+            // Enforce scheduling hours notice policy
             if (schedulingHoursNoticeRequired > 0) {
                 if ( !validateSchedulingHoursNoticeRequired(sas) ) continue;
             }
@@ -240,7 +240,7 @@ public with sharing class StaffAvailabilityWrapperService {
     }
 
     /**********************************
-     * Get slot object from start and end times
+     * @description Get slot object from start and end times
      * @param Datetime start time
      * @param Datetime end time
      * @return StaffAvailabilityWrapper.AvailabilitySlot individual availability slot 
@@ -258,8 +258,8 @@ public with sharing class StaffAvailabilityWrapperService {
     }
 
     /**********************************
-     * Verify that schedule is not within minimum number of days of existing appointment
-     * This method caches list of appointments to be used in other validations
+     * @description Verify that schedule is not within minimum number of days of existing appointment
+     *     This method caches list of appointments to be used in other validations
      * @param Staff_Availability_Schedule__c
      * @return Boolean true value represents a valid schedule
      **********************************/
@@ -285,6 +285,13 @@ public with sharing class StaffAvailabilityWrapperService {
         return isValid;
     }
 
+    /**********************************
+     * @description Verify that an availability schedule is not in violation of the
+     *     define scheduling hours notice policy
+     * @param Staff_Availability_Schedule__c
+     * @return Boolean true value represents a valid schedule
+     **********************************/
+
     private static Boolean validateSchedulingHoursNoticeRequired(
         Staff_Availability_Schedule__c sas
     ) {
@@ -292,7 +299,7 @@ public with sharing class StaffAvailabilityWrapperService {
     }
 
     /**********************************
-     * Store invalid month keys in a set to guard against max appointments in a month
+     * @description Store invalid month keys in a set to guard against max appointments in a month
      **********************************/
 
     private static void setMaxedOutMonths() {
@@ -313,7 +320,7 @@ public with sharing class StaffAvailabilityWrapperService {
     }
 
     /**********************************
-     * Creates a key for set of maxed out months (maxedOutMonths)
+     * @description Creates a key for set of maxed out months (maxedOutMonths)
      * @param dtValue Date time value to create key for
      * @return String Month key
      **********************************/
@@ -326,7 +333,7 @@ public with sharing class StaffAvailabilityWrapperService {
     }
     
     /**********************************
-     * Cache and return collection of complete and scheduled appointments for this
+     * @description Cache and return collection of complete and scheduled appointments for this
      *   membership category and contact
      * @return Appointment__c[] list of appointments
      **********************************/
@@ -342,7 +349,7 @@ public with sharing class StaffAvailabilityWrapperService {
     }
 
     /**********************************
-     * Set static variable to earliest availability time boundary, 
+     * @description Set static variable to earliest availability time boundary, 
      *   based on rounded current time plus required hours' notice
      ***********************************/
 
