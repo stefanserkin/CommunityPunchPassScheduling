@@ -80,15 +80,15 @@ If checked, scheduled appointments will be automatically checked in and decremen
 
 The length of an individual appointment in minutes.
 
-### Permissions
+## Permissions
 
 The component is set to enforce the level of access defined in the org, so may require some additional permissions.
 
-#### Apex Class Access
+### Apex Class Access
 
 CommunityPunchPassesController
 
-#### Sharing Settings
+### Sharing Settings
 
 External users must have at least Read Only access to Memberships and Transactions related to their Account. Define access using Sharing Sets.
 
@@ -97,9 +97,9 @@ External users must have at least Read Only access to Memberships and Transactio
 
 Setup > Feature Settings > Digital Experiences > Settings > Sharing Sets
 
-### Query Criteria (What Shows Up?)
+## Query Criteria (What Shows Up?)
 
-#### Active Punch Passes
+### Active Punch Passes
 
 Membership (TREX1__Membership__c) records appear in the Active Punch Passes section when:
 
@@ -110,7 +110,7 @@ Membership (TREX1__Membership__c) records appear in the Active Punch Passes sect
 * Status does not equal ‘Complete’
 * End Date is greater than or equal to Today or null
 
-#### Completed Punch Passes
+### Completed Punch Passes
 
 Membership (TREX1__Membership__c) records appear in the Completed Punch Passes section when:
 
