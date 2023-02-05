@@ -46,9 +46,9 @@ Enables appointment functionality
 *Required Hours Notice for Cancellation*
 Appointment cancellation will be disabled for appointments within this window
 
-### Appointment Settings
+## Appointment Settings
 
-#### Membership Category Appointment Settings
+### Membership Category Appointment Settings
 
 #### Maximum Monthly Appointments
 
@@ -70,15 +70,11 @@ Appointment cancellation will be disabled for appointments that violate this pol
 
 The number of minutes between available appointment slots. E.g. An interval of 15 will show slots at 3pm, 3:15pm, 3:30pm, etc.. Default is 30 minutes.
 
-In this example configuration on the membership category:
+#### Automatically Check In Appointments
 
-* No more than 2 appointments can be scheduled within a calendar month
-* Only 1 appointment per day is allowed
-* 24 hours’ notice is required for all new appointments and cancellations
-* Blocks will be offered on the hour and half-hour
-    * e.g. If a staff member is available from 1 - 2pm, a 30-minute appointment can be scheduled at 1pm or 1:30pm, but *not* 1:15pm.
+If checked, scheduled appointments will be automatically checked in and decremented when they have passed
 
-#### Membership Type Appointment Settings
+### Membership Type Appointment Settings
 
 #### Appointment Length
 
@@ -100,35 +96,6 @@ External users must have at least Read Only access to Memberships and Transactio
 * TREX1__Transaction__c
 
 Setup > Feature Settings > Digital Experiences > Settings > Sharing Sets
-
-#### Object Settings
-
-Users should have the following object access.
-
-Name	Type	Object	Level of Access
-Membership Type	Object	Membership Type	Read
-Punch Pass Membership Type	Assigned Record Type	Membership Type	
-Name	Field	Membership Type	Read Access
-Membership	Object	Membership	Read
-Punch Pass Membership	Assigned Record Type	Membership	
-Account	Field	Membership	Read Access
-Category Name	Field	Membership	Read Access
-Credits Used	Field	Membership	Read Access
-Contact	Field	Membership	Read Access
-Membership End Date	Field	Membership	Read Access
-Membership Start Date	Field	Membership	Read Access
-Membership Status	Field	Membership	Read Access
-Membership Type	Field	Membership	Read Access
-Membership Type	Field	Membership	Read Access
-Purchasing Transaction	Field	Membership	Read Access
-Remaining Credits	Field	Membership	Read Access
-Total Credits	Field	Membership	Read Access
-Pass Decrement	Object	Pass Decrement	Read
-Date	Field	Pass Decrement	Read Access
-Value	Field	Pass Decrement	Read Access
-Membership Punch Pass Decrement	Field	Pass Decrement	Read Access
-Transaction (TRec)	Object	Transaction	Read
-Standard	Assigned Record Type	Transaction	
 
 ### Query Criteria (What Shows Up?)
 
