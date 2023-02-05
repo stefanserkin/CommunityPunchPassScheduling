@@ -150,9 +150,12 @@ public with sharing class StaffAvailabilityWrapperService {
 
             // Enforce minimum days between appointments policy
             if (minimumDaysBetweenAppointments > 0) {
-                if( !validateMinimumNumberOfDaysPolicy(sas) ) {
-                    continue;
-                }
+                if( !validateMinimumNumberOfDaysPolicy(sas) ) continue;
+            }
+
+            // Enforce scheduling hours notice required
+            if (schedulingHoursNoticeRequired > 0) {
+                if ( !validateSchedulingHoursNoticeRequired(sas) ) continue;
             }
 
             if (!mapDateToWrapper.containsKey(sas.Date_Only__c)) {
@@ -256,6 +259,7 @@ public with sharing class StaffAvailabilityWrapperService {
 
     /**********************************
      * Verify that schedule is not within minimum number of days of existing appointment
+     * This method caches list of appointments to be used in other validations
      * @param Staff_Availability_Schedule__c
      * @return Boolean true value represents a valid schedule
      **********************************/
@@ -264,7 +268,6 @@ public with sharing class StaffAvailabilityWrapperService {
         Staff_Availability_Schedule__c sas
     ) {
         Boolean isValid = true;
-        // This method replaces the lines above - caches list of appointments to be used in other validations
         List<Appointment__c> lstAppointments = getExistingAppointments();
 
         Date minBoundary = sas.Date_Only__c.addDays(-minimumDaysBetweenAppointments);
@@ -280,6 +283,12 @@ public with sharing class StaffAvailabilityWrapperService {
             }
         }
         return isValid;
+    }
+
+    private static Boolean validateSchedulingHoursNoticeRequired(
+        Staff_Availability_Schedule__c sas
+    ) {
+        return Datetime.now().addHours(schedulingHoursNoticeRequired) < sas.End_DateTime__c;
     }
 
     /**********************************
