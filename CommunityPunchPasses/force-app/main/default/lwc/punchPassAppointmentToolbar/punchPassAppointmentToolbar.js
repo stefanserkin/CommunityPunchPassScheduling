@@ -13,7 +13,7 @@ export default class PunchPassAppointmentToolbar extends LightningElement {
 	connectedCallback() {
 		Promise.all([
 		    loadStyle(this, modalStyle)
-		])
+		]);
 	}
 
     isLoading = false;
@@ -35,11 +35,12 @@ export default class PunchPassAppointmentToolbar extends LightningElement {
 		this.isLoading = true;
 		this.wiredMembership = result;
         if (result.data) {
-            this.membership = result.data;
-            this.membershipTypeId = result.data.TREX1__memb_Type__c;
-            this.locationId = result.data.TREX1__memb_Type__r.TREX1__Location__c;
-            this.appointmentLength = result.data.TREX1__memb_Type__r.Appointment_Length__c;
-            this.cancellationHoursNotice = result.data.TREX1__memb_Type__r.Cancellation_Hours_Notice_Required__c;
+            const mem = result.data;
+            this.membership = mem;
+            this.membershipTypeId = mem.TREX1__memb_Type__c;
+            this.locationId = mem.TREX1__memb_Type__r.TREX1__Location__c;
+            this.appointmentLength = mem.TREX1__memb_Type__r.Appointment_Length__c;
+            this.cancellationHoursNotice = mem.TREX1__memb_Type__r.Cancellation_Hours_Notice_Required__c;
             this.error = undefined;
 			this.isLoading = false;
         } else if (result.error) {
@@ -67,6 +68,7 @@ export default class PunchPassAppointmentToolbar extends LightningElement {
     handleModalClose() {
         getRecordNotifyChange([{recordId: this.recordId}]);
         refreshApex(this.wiredMembership);
+        eval("$A.get('e.force:refreshView').fire();");
         this.showCancelModal = false;
 		this.showScheduler = false;
     }

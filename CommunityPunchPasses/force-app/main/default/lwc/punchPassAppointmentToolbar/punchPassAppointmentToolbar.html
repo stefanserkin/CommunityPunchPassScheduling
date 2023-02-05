@@ -1,26 +1,34 @@
 <template>
 
-    <div class="slds-grid slds-gutters">
-        <div class="slds-col">
-            <lightning-button 
-                if:true={hasAppointmentsToSchedule}
-                variant="brand-outline" 
-                label="Schedule Appointment" 
-                title="Schedule Appointment" 
-                onclick={handleOpenScheduler} 
-                class="slds-m-left_medium"
-            ></lightning-button>
-        </div>
-        <div class="slds-col">
-            <lightning-button 
-                variant="destructive-text" 
-                label="Cancel Appointment" 
-                title="Cancel Appointment" 
-                onclick={handleOpenCancelModal} 
-                class="slds-m-left_medium"
-            ></lightning-button>
-        </div>
-    </div>
+    <lightning-layout>
+        <lightning-layout-item class="button-bar" padding="around-small" size="12">
+            <!-- SPINNER ON LOAD -->
+            <div if:true={isLoading} class="slds-is-relative" >
+                <lightning-spinner 
+                    alternative-text="Loading..." 
+                    variant="brand" 
+                    size="medium"
+                ></lightning-spinner>
+            </div>
+            <lightning-button-group if:false={isLoading}>
+                <lightning-button 
+                    if:true={hasAppointmentsToSchedule}
+                    variant="neutral" 
+                    label="Schedule Appointment" 
+                    title="Schedule Appointment" 
+                    icon-name="action:log_event" 
+                    onclick={handleOpenScheduler} 
+                ></lightning-button>
+                <lightning-button 
+                    variant="neutral" 
+                    label="Manage Appointments" 
+                    title="Manage Appointments" 
+                    icon-name="action:new_event"  
+                    onclick={handleOpenCancelModal} 
+                ></lightning-button>
+            </lightning-button-group>
+        </lightning-layout-item>
+    </lightning-layout>
 
     <template if:true={showScheduler}>
         <c-community-punch-passes-scheduler
@@ -28,7 +36,7 @@
             membership-type-id={membershipTypeId} 
             location-id={locationId} 
             appointment-length={appointmentLength}
-            punch-pass-id={membership.Id}
+            punch-pass-id={recordId}
             onclose={handleModalClose}
         ></c-community-punch-passes-scheduler>
     </template>
