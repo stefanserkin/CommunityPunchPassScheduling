@@ -12,9 +12,7 @@ const STATUSES = ['Scheduled','Complete','Cancelled'];
 
 /* Datatable columns */
 const COLS = [
-    { label: 'Athlete', fieldName: 'contactName', type: 'text', hideDefaultActions: true },
-    { label: 'Package', fieldName: 'membershipType', type: 'text', hideDefaultActions: true },
-    { label: 'Date', fieldName: 'Start_DateTime__c', type: 'date', hideDefaultActions: true, 
+    { label: 'Date', fieldName: 'startTime', type: 'date', hideDefaultActions: true, 
         typeAttributes:{
             year: "numeric", 
             month: "long", 
@@ -24,8 +22,11 @@ const COLS = [
             hour12: true
         }
     },
-    { label: 'Status', fieldName: 'Status__c', type: 'text', hideDefaultActions: true },
-    { label: 'Attended', fieldName: 'Attended__c', type: 'boolean', hideDefaultActions: true }
+    { label: 'Athlete', fieldName: 'athlete', type: 'text', hideDefaultActions: true },
+    { label: 'Lesson Type', fieldName: 'membershipCategory', type: 'text', hideDefaultActions: true },
+    { label: 'Phone', fieldName: 'primaryPhone', type: 'phone', hideDefaultActions: true }, 
+    { label: 'Email', fieldName: 'primaryEmail', type: 'email', hideDefaultActions: true }, 
+    { label: 'Attended', fieldName: 'isAttended', type: 'boolean', hideDefaultActions: true }
 ];
 
 export default class CommunityStaffAppointments extends LightningElement {
@@ -69,7 +70,7 @@ export default class CommunityStaffAppointments extends LightningElement {
 		this.activeStatus = `${event.target.label}`;
 		this.filteredAppointments = [];
 		if (this.allAppointments != null && this.allAppointments.length > 0) {
-			this.filteredAppointments = this.allAppointments.filter(row => row.Status__c === this.activeStatus);
+			this.filteredAppointments = this.allAppointments.filter(row => row.status === this.activeStatus);
 		}
         // Data is sorted by start time ascending. Reverse for complete and cancelled.
         if (this.activeStatus === 'Complete' || this.activeStatus === 'Cancelled') {
@@ -95,23 +96,14 @@ export default class CommunityStaffAppointments extends LightningElement {
     @wire(getStaffAppointments, {
         userId: '$userId'
     }) wiredAppts(result) {
-        console.log('user id when entering wire function: ' + this.userId);
         this.isLoading = true;
         this.wiredAppointments = result;
 
         if (result.data) {
             let rows = JSON.parse( JSON.stringify(result.data) );
-            console.table(rows);
-            
-            rows.forEach(dataParse => {
-                dataParse.contactName = dataParse.Contact__r.Name;
-                dataParse.membershipType = dataParse.Membership__r.TREX1__Type__c != null
-                    ? dataParse.Membership__r.TREX1__Type__c
-                    : '';
-			}); 
             
             this.allAppointments = rows;
-            this.filteredAppointments = rows.filter(row => row.Status__c === this.activeStatus);
+            this.filteredAppointments = rows.filter(row => row.status === this.activeStatus);
             // Data is sorted by start time ascending. Reverse for complete and cancelled.
             if (this.activeStatus === 'Complete' || this.activeStatus === 'Cancelled') {
                 this.filteredAppointments = this.filteredAppointments.reverse();
@@ -130,15 +122,13 @@ export default class CommunityStaffAppointments extends LightningElement {
     /* Datatable selection */
 
     getSelected(event) {
-        console.log('row was selected');
         let selectedRows = event.detail.selectedRows;
         if (this.selectedAppointments.length > 0) {
-            let selectedIds = selectedRows.map(row => row.Id);
-            let unselectedRows = this.selectedAppointments.filter(row => !selectedIds.includes(row.Id));
+            let selectedIds = selectedRows.map(row => row.id);
+            let unselectedRows = this.selectedAppointments.filter(row => !selectedIds.includes(row.id));
             console.log(unselectedRows);
         }
         this.selectedAppointments = selectedRows;
-        console.table(this.selectedAppointments);
     }
 
     /* Button actions */
@@ -151,20 +141,24 @@ export default class CommunityStaffAppointments extends LightningElement {
 
         this.isLoading = true;
 
+        let appIds = [];
+        this.selectedAppointments.forEach(app => {
+            appIds.push(app.id);
+        });
+
         /**
          * Should have some sort of modal guard here - confirm
          */
 
-        checkInAppointments({lstAppointments: this.selectedAppointments})
+        checkInAppointments({lstAppointmentIds: appIds})
             .then((result) => {
                 const lstFailedCheckinIds = result;
-                console.log(lstFailedCheckinIds);
                 var toastMessage;
                 var toastVariant;
                 var toastTitle;
 
                 let lstAlreadyCheckedIn = [];
-                lstAlreadyCheckedIn = this.selectedAppointments.filter(item => item.Attended__c);
+                lstAlreadyCheckedIn = this.selectedAppointments.filter(item => item.isAttended);
                 console.table(lstAlreadyCheckedIn);
 
                 if (lstFailedCheckinIds.length == 0) {
@@ -193,7 +187,6 @@ export default class CommunityStaffAppointments extends LightningElement {
             .catch(error => {
                 this.error = error;
                 this.isLoading = false;
-                window.console.log('Unable to create the records due to ' + JSON.stringify(this.error));
             });
 
     }
@@ -211,7 +204,12 @@ export default class CommunityStaffAppointments extends LightningElement {
 
         this.isLoading = true;
 
-        cancelAppointments({lstAppointments: this.selectedAppointments})
+        let appIds = [];
+        this.selectedAppointments.forEach(app => {
+            appIds.push(app.id);
+        });
+
+        cancelAppointments({lstAppointmentIds: appIds})
             .then(() => {
                 this.dispatchEvent(
                     new ShowToastEvent({
@@ -226,7 +224,6 @@ export default class CommunityStaffAppointments extends LightningElement {
             .catch((error) => {
                 this.error = error;
                 this.isLoading = false;
-                window.console.log('Unable to create the records due to ' + JSON.stringify(this.error));
             })
     }
 
