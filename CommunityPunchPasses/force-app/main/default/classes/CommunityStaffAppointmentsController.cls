@@ -35,12 +35,16 @@ public without sharing class CommunityStaffAppointmentsController {
 
     @AuraEnabled
     public static List<String> checkInAppointments(
-        List<Appointment__c> lstAppointments
+        List<String> lstAppointmentIds
     ){
         List<String> lstFailedCheckinIds = new List<String>();
-        List<Appointment__c> lstAppointmentsToUpdate = new List<Appointment__c>();
+        List<Appointment__c> lstAppointmentsToUpdate = [
+            SELECT Id, Attended__c, Membership__r.TREX1__Remaining_Value__c, Bypass_Auto_Decrement__c
+              FROM Appointment__c
+             WHERE Id IN :lstAppointmentIds
+        ];
 
-        for (Appointment__c appt : lstAppointments) {
+        for (Appointment__c appt : lstAppointmentsToUpdate) {
             // No action to take on already attended appointments
             if (appt.Attended__c) {
                 lstFailedCheckinIds.add(appt.Id);
@@ -53,7 +57,6 @@ public without sharing class CommunityStaffAppointmentsController {
             }
 
             appt.Attended__c = true;
-            lstAppointmentsToUpdate.add(appt);
 
         }
 

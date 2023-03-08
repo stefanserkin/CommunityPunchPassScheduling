@@ -93,37 +93,38 @@ private class CommunityStaffAppointmentsControllerTest {
     @isTest
     static void testGetStaffAppointments() {
         User staffUser = [SELECT Id FROM User WHERE Email = :STAFF_EMAIL LIMIT 1];
+        List<CommunityStaffAppointmentsController.AppointmentWrapper> lstAppWrappers;
         Test.startTest();
-        List<Appointment__c> lstAppointments = CommunityStaffAppointmentsController.getStaffAppointments(
+        lstAppWrappers = CommunityStaffAppointmentsController.getStaffAppointments(
             staffUser.Id
         );
         Test.stopTest();
-        System.assertEquals(2, lstAppointments.size(), 'Should have received two appointments');
+        System.assertEquals(2, lstAppWrappers.size(), 'Should have received two appointments');
     }
 
     @isTest
     static void testCheckInAppointments() {
         User staffUser = [SELECT Id FROM User WHERE Email = :STAFF_EMAIL LIMIT 1];
-        List<Appointment__c> lstAppointments = new List<Appointment__c>();
-        lstAppointments = CommunityStaffAppointmentsController.getStaffAppointments(
+        List<CommunityStaffAppointmentsController.AppointmentWrapper> lstAppWrappers;
+        lstAppWrappers = CommunityStaffAppointmentsController.getStaffAppointments(
             staffUser.Id
         );
-        List<Appointment__c> lstPastAppointments = new List<Appointment__c>();
-        for (Appointment__c appt : lstAppointments) {
-            if (appt.Start_DateTime__c < DateTime.now()) {
-                lstPastAppointments.add(appt);
+        List<String> lstPastAppointmentIds = new List<String>();
+        for (CommunityStaffAppointmentsController.AppointmentWrapper appt : lstAppWrappers) {
+            if (appt.startTime < DateTime.now()) {
+                lstPastAppointmentIds.add(appt.id);
             }
         }
         List<String> lstFailures = new List<String>();
         
         Test.startTest();
-        lstFailures = CommunityStaffAppointmentsController.checkInAppointments(lstPastAppointments);
+        lstFailures = CommunityStaffAppointmentsController.checkInAppointments(lstPastAppointmentIds);
         Test.stopTest();
         
         System.assert(lstFailures.isEmpty(), 'Failed to update an eligible appointment');
         
         List<Appointment__c> lstRefreshedAppointments = [
-            SELECT Id, Attended__c, Membership__c FROM Appointment__c WHERE Id IN :lstPastAppointments
+            SELECT Id, Attended__c, Membership__c FROM Appointment__c WHERE Id IN :lstPastAppointmentIds
         ];
 
         System.assertEquals(
@@ -137,22 +138,22 @@ private class CommunityStaffAppointmentsControllerTest {
     @isTest
     static void testCancelAppointments() {
         User staffUser = [SELECT Id FROM User WHERE Email = :STAFF_EMAIL LIMIT 1];
-        List<Appointment__c> lstAppointments = new List<Appointment__c>();
+        List<CommunityStaffAppointmentsController.AppointmentWrapper> lstAppointments;
         lstAppointments = CommunityStaffAppointmentsController.getStaffAppointments(
             staffUser.Id
         );
-        List<Appointment__c> lstUpcomingAppointments = new List<Appointment__c>();
-        for (Appointment__c appt : lstAppointments) {
-            if (appt.Start_DateTime__c > DateTime.now()) {
-                lstUpcomingAppointments.add(appt);
+        List<String> lstUpcomingAppointmentIds = new List<String>();
+        for (CommunityStaffAppointmentsController.AppointmentWrapper appt : lstAppointments) {
+            if (appt.startTime > DateTime.now()) {
+                lstUpcomingAppointmentIds.add(appt.id);
             }
         }
         Test.startTest();
-        CommunityStaffAppointmentsController.cancelAppointments(lstUpcomingAppointments);
+        CommunityStaffAppointmentsController.cancelAppointments(lstUpcomingAppointmentIds);
         Test.stopTest();
 
         List<Appointment__c> lstRefreshedAppointments = [
-            SELECT Id, Status__c FROM Appointment__c WHERE Id IN :lstUpcomingAppointments
+            SELECT Id, Status__c FROM Appointment__c WHERE Id IN :lstUpcomingAppointmentIds
         ];
 
         String expectedStatus = CommunityStaffAppointmentsController.STATUS_CANCELLED;
@@ -169,28 +170,28 @@ private class CommunityStaffAppointmentsControllerTest {
         // Get staff
         User staffUser = [SELECT Id FROM User WHERE Email = :STAFF_EMAIL LIMIT 1];
         // Get all appointments
-        List<Appointment__c> lstAppointments = new List<Appointment__c>();
+        List<CommunityStaffAppointmentsController.AppointmentWrapper> lstAppointments;
         lstAppointments = CommunityStaffAppointmentsController.getStaffAppointments(
             staffUser.Id
         );
         // Filter to past appointments
-        List<Appointment__c> lstPastAppointments = new List<Appointment__c>();
-        for (Appointment__c appt : lstAppointments) {
-            if (appt.Start_DateTime__c < DateTime.now()) {
-                lstPastAppointments.add(appt);
+        List<String> lstPastAppointmentIds = new List<String>();
+        for (CommunityStaffAppointmentsController.AppointmentWrapper appt : lstAppointments) {
+            if (appt.startTime < DateTime.now()) {
+                lstPastAppointmentIds.add(appt.id);
             }
         }
         // Check in appointment
 		List<String> lstFirstFailures = new List<String>();
         lstFirstFailures = CommunityStaffAppointmentsController.checkInAppointments(
-            lstPastAppointments
-        );      
+            lstPastAppointmentIds
+        );
         
         // Attempt to check in appointment a second time
         List<String> lstSecondFailures = new List<String>();
         Test.startTest();
         lstSecondFailures = CommunityStaffAppointmentsController.checkInAppointments(
-            lstPastAppointments
+            lstPastAppointmentIds
         );
         Test.stopTest();
         
@@ -204,19 +205,24 @@ private class CommunityStaffAppointmentsControllerTest {
         // Get staff
         User staffUser = [SELECT Id FROM User WHERE Email = :STAFF_EMAIL LIMIT 1];
         // Get all appointments
-        List<Appointment__c> lstAppointments = new List<Appointment__c>();
+        List<CommunityStaffAppointmentsController.AppointmentWrapper> lstAppointments;
         lstAppointments = CommunityStaffAppointmentsController.getStaffAppointments(
             staffUser.Id
         );
         // Filter to past appointments
-        List<Appointment__c> lstPastAppointments = new List<Appointment__c>();
-        for (Appointment__c appt : lstAppointments) {
-            if (appt.Start_DateTime__c < DateTime.now()) {
-                lstPastAppointments.add(appt);
+        List<String> lstPastAppointmentIds = new List<String>();
+        for (CommunityStaffAppointmentsController.AppointmentWrapper appt : lstAppointments) {
+            if (appt.startTime < DateTime.now()) {
+                lstPastAppointmentIds.add(appt.id);
             }
         }
         
-        TREX1__Membership__c punchPass = [SELECT Id, TREX1__Remaining_Value__c FROM TREX1__Membership__c WHERE Id = :lstPastAppointments.get(0).Membership__c LIMIT 1];
+        TREX1__Membership__c punchPass = [
+            SELECT Id, TREX1__Remaining_Value__c 
+              FROM TREX1__Membership__c 
+             WHERE Id IN (SELECT Membership__c FROM Appointment__c WHERE Id IN :lstPastAppointmentIds)
+             LIMIT 1
+        ];
         
         // Decrement punch pass until remaining equals zero
         List<TREX1__Pass_Decrement__c> lstDecrements = new List<TREX1__Pass_Decrement__c>();
@@ -232,14 +238,17 @@ private class CommunityStaffAppointmentsControllerTest {
         List<Appointment__c> lstRefreshedAppointments = [
             SELECT Id, Attended__c, Bypass_Auto_Decrement__c, Membership__c, Membership__r.TREX1__Remaining_Value__c 
               FROM Appointment__c
-             WHERE Id IN :lstPastAppointments
+             WHERE Id IN :lstPastAppointmentIds
         ];
+
+        List<String> lstRefreshedIds = new List<String>();
+        for (Appointment__c refreshedApp : lstRefreshedAppointments) lstRefreshedIds.add(refreshedApp.Id);
 
         // Attempt to check in appointment
         List<String> lstFailures = new List<String>();
         Test.startTest();
         lstFailures = CommunityStaffAppointmentsController.checkInAppointments(
-            lstRefreshedAppointments
+            lstRefreshedIds
         );
         Test.stopTest();
 
