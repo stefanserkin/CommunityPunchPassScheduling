@@ -1,0 +1,75 @@
+<template>
+
+    <!-- LIGHTNING SPINNER ON LOAD -->
+	<template if:true={isLoading}>
+		<lightning-spinner alternative-text="Loading" size="medium"></lightning-spinner>
+	</template>
+
+    <lightning-card title={cardTitle} icon-name="custom:custom95">
+
+        <!-- ACTIONS BUTTON MENU -->
+        <lightning-button 
+            if:true={showCheckIn} 
+            slot="actions" 
+            variant="brand" 
+            label="Check In" 
+            title="Check In" 
+            onclick={handleCheckIn} 
+            class="slds-m-right_x-small"
+        ><label></label>
+        </lightning-button>
+        <lightning-button 
+            if:true={showCancel}
+            slot="actions" 
+            variant="destructive-text" 
+            label="Cancel Appointment" 
+            title="Cancel Appointment" 
+            onclick={handleCancel} 
+            class="slds-m-right_x-small"
+        ><label></label>
+        </lightning-button>
+
+		<lightning-button-icon 
+            slot="actions" 
+            icon-name="utility:refresh"  
+            alternative-text="Refresh Component" 
+            title="Refresh" 
+            onclick={refreshComponent}
+        ><label></label>
+        </lightning-button-icon>
+
+        <!-- BEGIN TABSET -->
+        <lightning-tabset variant="vertical" active-tab-value="0">
+            <template for:each={tabs} for:item="tab">
+                <lightning-tab label={tab.label} 
+                    key={tab.value} 
+                    value={tab.value} 
+                    onactive={handleActiveTab}
+                >
+                    <!-- STATUS HEADER -->
+                    <h2 class="slds-text-heading_small slds-var-m-around_x-small slds-align_absolute-center">
+                        {tab.header}
+                    </h2>
+
+                    <!-- DEFAULT MESSAGE FOR NO APPOINTMENTS -->
+                    <template if:false={filteredAppointments}>
+						<p class="slds-var-m-around_x-small">No appointments found</p>
+					</template>
+
+                    <!-- DATATABLE WITH APPOINTMENTS FILTERED TO STATUS -->
+                    <template if:true={filteredAppointments}>
+                        <lightning-datatable 
+                            data={filteredAppointments}
+                            columns={cols} 
+                            key-field="id" 
+                            column-widths-mode="auto" 
+                            onrowselection={getSelected} 
+                        ></lightning-datatable>
+                    </template>
+
+                </lightning-tab>
+            </template>
+        </lightning-tabset>
+
+    </lightning-card>
+</template>
