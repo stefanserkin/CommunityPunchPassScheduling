@@ -1,12 +1,8 @@
 import { LightningElement, api, wire } from 'lwc';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
-import { updateRecord } from 'lightning/uiRecordApi';
 import { refreshApex } from '@salesforce/apex';
 import getAppointmentsFromMembership from '@salesforce/apex/CommunityPunchPassesController.getAppointmentsFromMembership';
-
-import ID_FIELD from '@salesforce/schema/Appointment__c.Id';
-import STATUS_FIELD from '@salesforce/schema/Appointment__c.Status__c';
-import CANCEL_DATE_FIELD from '@salesforce/schema/Appointment__c.Cancellation_Date__c';
+import updateAppointment from '@salesforce/apex/CommunityPunchPassesController.updateRecord';
 
 const INITIAL_WIDTH = '25%';
 
@@ -77,7 +73,7 @@ const CANCELLED_COLS = [
 export default class CommunityPunchPassesModal extends LightningElement {
 
     @api punchPass;
-    @api cancellationHoursNotice;
+    cancellationHoursNotice;
 
     error;
     isLoading = false;
@@ -140,6 +136,7 @@ export default class CommunityPunchPassesModal extends LightningElement {
 
                 let earliestCancelTime = new Date();
                 let appointmentStartTime = new Date(dataParse.Start_DateTime__c);
+                this.cancellationHoursNotice = dataParse.Membership_Category__r.Cancellation_Hours_Notice_Required__c;
                 earliestCancelTime.setHours(earliestCancelTime.getHours() + this.cancellationHoursNotice);
 
                 let cancelDate = new Date(dataParse.Cancellation_Date__c);
@@ -176,16 +173,16 @@ export default class CommunityPunchPassesModal extends LightningElement {
         this.selectedAppointmentId = event.detail.row.Id;
 
         let today = new Date().toISOString().slice(0, 10);
-        
-        const fields = {};
-        fields[ID_FIELD.fieldApiName] = this.selectedAppointmentId;
-        fields[STATUS_FIELD.fieldApiName] = 'Cancelled';
-        fields[CANCEL_DATE_FIELD.fieldApiName] = today;
-        const recordInput = {
-            fields: fields
+        const cancelledStatus = 'Cancelled';
+
+        const record = {
+            sobjectType: "Appointment__c",
+            Id: this.selectedAppointmentId,
+            Cancellation_Date__c: today,
+            Status__c: cancelledStatus
         };
 
-        updateRecord(recordInput)
+        updateAppointment({ record })
             .then(() => {
                 this.dispatchEvent(
                     new ShowToastEvent({
@@ -209,37 +206,6 @@ export default class CommunityPunchPassesModal extends LightningElement {
                 this.isLoading = false;
             });
 
-    }
-
-    // Controls the height of the datatable based on the number of records
-    get setScheduledDatatableHeight() {
-        if (this.numScheduledAppointments == 0) {
-            return 'height:2rem;';
-        }
-        else if (this.numScheduledAppointments > 10) {
-            return 'height:50rem;';
-        }
-        return '';
-    }
-
-    get setCompleteDatatableHeight() {
-        if (this.numCompleteAppointments == 0) {
-            return 'height:2rem;';
-        }
-        else if (this.numCompleteAppointments > 10) {
-            return 'height:50rem;';
-        }
-        return '';
-    }
-
-    get setCancelledDatatableHeight() {
-        if (this.numCancelledAppointments == 0) {
-            return 'height:2rem;';
-        }
-        else if (this.numCancelledAppointments > 10) {
-            return 'height:50rem;';
-        }
-        return '';
     }
 
     get numScheduledAppointments() {

@@ -1,8 +1,8 @@
 import { LightningElement, api, wire } from 'lwc';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import { refreshApex } from '@salesforce/apex';
-import { createRecord } from 'lightning/uiRecordApi';
 import getAssignedStaffAvailability from '@salesforce/apex/CommunityPunchPassesController.getAssignedStaffAvailability';
+import createAppointment from '@salesforce/apex/CommunityPunchPassesController.createRecord';
 
 import APPOINTMENT_OBJECT from '@salesforce/schema/Appointment__c';
 import CONTACT_FIELD from '@salesforce/schema/Appointment__c.Contact__c';
@@ -56,7 +56,7 @@ export default class CommunityPunchPassesScheduler extends LightningElement {
      *      (DateTime) row.availabilitySlots[0].endTime
      *****************************************/
 
-     @wire(getAssignedStaffAvailability, { 
+    @wire(getAssignedStaffAvailability, { 
 		punchPassId: '$punchPassId'
 	}) wiredWrappers(result) {
 		this.isLoading = true;
@@ -92,7 +92,6 @@ export default class CommunityPunchPassesScheduler extends LightningElement {
             // De-dupe staff list
             const key = 'staffId';
             this.lstStaff = [...new Map(lstStaffWithDuplicates.map(item => [item[key], item])).values()];
-
             this.allAppointmentDays = rows;
             this.error = undefined;
 			this.isLoading = false;
@@ -123,18 +122,16 @@ export default class CommunityPunchPassesScheduler extends LightningElement {
         
         const newAppointmentStatus = 'Scheduled';
 
-        const fields = {};
-        fields[CONTACT_FIELD.fieldApiName] = this.punchPass.TREX1__Contact__c;
-        fields[STARTDATE_FIELD.fieldApiName] = this.appointmentStart;
-        fields[ENDDATE_FIELD.fieldApiName] = this.appointmentEnd;
-        fields[STAFF_FIELD.fieldApiName] = this.selectedStaffId;
-        fields[STATUS_FIELD.fieldApiName] = newAppointmentStatus;
-        fields[MEMBERSHIP_FIELD.fieldApiName] = this.punchPass.Id;
-        const recordInput = { 
-            apiName: APPOINTMENT_OBJECT.objectApiName, 
-            fields 
+        const record = {
+            sobjectType: "Appointment__c",
+            Start_DateTime__c: this.appointmentStart,
+            End_DateTime__c: this.appointmentEnd,
+            Staff__c: this.selectedStaffId,
+            Status__c: newAppointmentStatus,
+            Membership__c: this.punchPass.Id
         };
-        createRecord(recordInput)
+
+        createAppointment({ record })
             .then((appt) => {
                 this.newAppointmentId = appt.Id;
                 this.dispatchEvent(
@@ -167,7 +164,7 @@ export default class CommunityPunchPassesScheduler extends LightningElement {
                 this.isLoading = false;
                 this.showConfirmationModal = false;
                 this.handleCloseEvent();
-            }))
+            }));
 
     }
 

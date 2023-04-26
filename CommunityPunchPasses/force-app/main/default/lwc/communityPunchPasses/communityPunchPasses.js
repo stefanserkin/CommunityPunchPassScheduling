@@ -6,9 +6,6 @@ import getActivePunchPassesByContact from '@salesforce/apex/CommunityPunchPasses
 import getCompletedPunchPassesByContact from '@salesforce/apex/CommunityPunchPassesController.getCompletedPunchPassesByContact';
 import getTransactionReceiptId from '@salesforce/apex/CommunityPunchPassesController.getTransactionReceiptId';
 
-import { loadStyle } from 'lightning/platformResourceLoader';
-import modalStyle from '@salesforce/resourceUrl/modalWide';
-
 import USER_ID from '@salesforce/user/Id';
 import CONTACTID_FIELD from '@salesforce/schema/User.ContactId';
 import ACCOUNTID_FIELD from '@salesforce/schema/User.AccountId';
@@ -61,13 +58,6 @@ export default class CommunityPunchPasses extends NavigationMixin(LightningEleme
 		}
     }
 
-	// Load wide modal css from static resource
-	connectedCallback() {
-		Promise.all([
-			 loadStyle(this, modalStyle)
-		 ])
-	}
-
 	@api cardIcon;
 	@api membershipCategoryNames = '';
 	@api packageReferenceNameSingular = '';
@@ -78,7 +68,6 @@ export default class CommunityPunchPasses extends NavigationMixin(LightningEleme
 	@api navigationButtonUrl;
 	@api openNavigationUrlInNewTab;
 	@api enableAppointmentScheduling = false;
-	@api cancellationHoursNotice;
 
 	cols;
 

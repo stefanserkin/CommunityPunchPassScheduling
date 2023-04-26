@@ -76,13 +76,6 @@
                 label="Allow appointment scheduling" 
                 description="Enables the Schedule Appointment action for active punch passes with remaining credits"
             />
-            <property 
-                name="cancellationHoursNotice" 
-                type="Integer" 
-                label="Required Hours Notice for Cancellation" 
-                default="0"
-                required="true"
-            />
         </targetConfig>
     </targetConfigs>
 </LightningComponentBundle>
