@@ -420,4 +420,175 @@ private class CommunityPunchPassesController_Test {
         
     }
 
+    @isTest
+    static void testCreateRecord() {
+        String accountName = 'New York Metropolitan Baseball Club';
+        Account acc = new Account(Name = accountName);
+        Test.startTest();
+        Account createdAccount = (Account) CommunityPunchPassesController.createRecord(acc);
+        Test.stopTest();
+        System.assertNotEquals(null, createdAccount.Id, 'The new account should have a record id');
+        System.assertEquals(accountName, createdAccount.Name, 'Should have received created record with provided name');
+    }
+
+    @isTest
+    static void testUpdateRecord() {
+        String accountName = 'New York Metropolitan Baseball Club';
+        String newAccountName = 'New York Mets';
+        insert new Account(Name = accountName);
+        Account accToUpdate = [SELECT Id, Name FROM Account WHERE Name = :accountName LIMIT 1];
+        Test.startTest();
+        accToUpdate.Name = newAccountName;
+        CommunityPunchPassesController.updateRecord(accToUpdate);
+        Test.stopTest();
+        Account updatedAccount = [SELECT Id, Name FROM Account WHERE Id = :accToUpdate.Id LIMIT 1];
+        System.assertEquals(newAccountName, updatedAccount.Name, 'Should have received updated record with new account name');
+    }
+    
+    @isTest
+    static void testCreateRecordWithException() {
+        Boolean hasException = false;
+        Contact ct = new Contact(Email='onlyanemail@noinfo.com');
+        Test.startTest();
+        try {
+            Contact createdContact = (Contact) CommunityPunchPassesController.createRecord(ct);
+        } catch (Exception e) {
+            hasException = true;
+        }
+        Test.stopTest();
+        System.assert(hasException, 'Should have received required fields exception when attempting to insert contact');
+    }
+    
+    @isTest
+    static void testUpdateRecordWithException() {
+        Boolean hasException = false;
+        String accountName = 'New York Metropolitan Baseball Club';
+        insert new Account(Name = accountName);
+        Account accToUpdate = [SELECT Id, Name FROM Account WHERE Name = :accountName LIMIT 1];
+        Test.startTest();
+        accToUpdate.Name = null;
+        try {
+            CommunityPunchPassesController.updateRecord(accToUpdate);
+        } catch (Exception e) {
+            hasException = true;
+        }
+        Test.stopTest();
+        System.assert(hasException, 'Should have received required fields exception when attempting to update account with no name');
+    }
+
+    @isTest
+    static void testCreateAppointment() {
+        // Create staff contact and staff record
+        Contact ct = TestDataFactory.createContacts(1).get(0);
+        insert ct;
+        TREX1__Staff__c staff = TestDataFactory.createStaffFromContacts(
+            new List<Contact>{ ct }
+        ).get(0);
+        insert staff;
+        
+        TREX1__Membership_Type__c memType = [
+            SELECT Id, Appointment_Length__c, TREX1__Location__c
+              FROM TREX1__Membership_Type__c
+             LIMIT 1
+        ];
+        
+        insert new Assigned_Staff__c(
+            Staff__c = staff.Id, 
+            Membership_Type__c = memType.Id
+        );
+        
+        // Get membership
+        TREX1__Membership__c membership = [
+            SELECT Id, TREX1__Contact__c, TREX1__memb_Category__c, TREX1__memb_Type__c 
+              FROM TREX1__Membership__c 
+             WHERE TREX1__memb_Type__c = :memType.Id 
+             LIMIT 1
+        ];
+        
+        // Create appointment sobject
+        Appointment__c appt = new Appointment__c();
+        appt.Contact__c = membership.TREX1__Contact__c;
+        appt.Staff__c = staff.Id;
+        appt.Membership__c = membership.Id;
+        appt.Status__c = 'Scheduled';
+        appt.Start_DateTime__c = DateTime.now().addHours(1);
+        appt.End_DateTime__c = DateTime.now().addHours(2);
+        appt.Bypass_Staff_Auto_Emails__c = true;
+        appt.Bypass_Customer_Auto_Emails__c = true;
+
+        Test.startTest();
+        SObject obj = CommunityPunchPassesController.createRecord(appt);
+        Test.stopTest();
+
+        System.assertNotEquals(null, obj.Id, 'New appointment should have an id');
+    }
+
+    @isTest
+    static void testUpdateAppointment() {
+        // Create staff contact and staff record
+        Contact ct = TestDataFactory.createContacts(1).get(0);
+        insert ct;
+        TREX1__Staff__c staff = TestDataFactory.createStaffFromContacts(
+            new List<Contact>{ ct }
+        ).get(0);
+        insert staff;
+        
+        TREX1__Membership_Type__c memType = [
+            SELECT Id, Appointment_Length__c, TREX1__Location__c
+              FROM TREX1__Membership_Type__c
+             LIMIT 1
+        ];
+        
+        insert new Assigned_Staff__c(
+            Staff__c = staff.Id, 
+            Membership_Type__c = memType.Id
+        );
+        
+        // Get membership
+        TREX1__Membership__c membership = [
+            SELECT Id, TREX1__Contact__c, TREX1__memb_Category__c, TREX1__memb_Type__c 
+              FROM TREX1__Membership__c 
+             WHERE TREX1__memb_Type__c = :memType.Id 
+             LIMIT 1
+        ];
+        
+        // Insert appointment
+        Appointment__c appt = new Appointment__c();
+        appt.Contact__c = membership.TREX1__Contact__c;
+        appt.Staff__c = staff.Id;
+        appt.Membership__c = membership.Id;
+        appt.Status__c = 'Scheduled';
+        appt.Start_DateTime__c = DateTime.now().addHours(1);
+        appt.End_DateTime__c = DateTime.now().addHours(2);
+        appt.Bypass_Staff_Auto_Emails__c = true;
+        appt.Bypass_Customer_Auto_Emails__c = true;
+        insert appt;
+
+        Test.startTest();
+        // Update to canceled values
+        Appointment__c apptToCancel = new Appointment__c();
+        apptToCancel.Id = appt.Id;
+        apptToCancel.Status__c = 'Cancelled';
+        apptToCancel.Cancellation_Date__c = Date.today();
+        
+        CommunityPunchPassesController.updateRecord(apptToCancel);
+        Test.stopTest();
+
+        Appointment__c apptRefreshed = [
+            SELECT Id, Status__c, Cancellation_Date__c FROM Appointment__c WHERE Id = :appt.Id LIMIT 1
+        ];
+
+        System.assertEquals(
+            'Cancelled', 
+            apptRefreshed.Status__c, 
+            'Appointment should have a cancelled status'
+        );
+        System.assertEquals(
+            apptToCancel.Cancellation_Date__c, 
+            apptRefreshed.Cancellation_Date__c, 
+            'Appointment should have a cancellation date of today'
+        );
+
+    }
+
 }

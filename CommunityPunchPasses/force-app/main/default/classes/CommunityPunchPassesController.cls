@@ -7,6 +7,7 @@ public without sharing class CommunityPunchPassesController {
 
     private static String userTimeZone = String.valueOf(UserInfo.getTimeZone());
 
+
     /**********************************
      * Get list of staff with availability wrappers, based on the location and 
      *   appointment length of a membership type
@@ -22,7 +23,6 @@ public without sharing class CommunityPunchPassesController {
     ){
         // Get punch pass with configuration settings
         TREX1__Membership__c punchPass = getPunchPassById(punchPassId);
-
         // Create list of wrappers
         List<StaffAvailabilityWrapper> lstWrappers = new List<StaffAvailabilityWrapper>();
 
@@ -48,6 +48,7 @@ public without sharing class CommunityPunchPassesController {
 
     }
 
+
     /**********************************
      * Get punch pass details from record page or single id scenario
      * @param String membership id
@@ -61,9 +62,9 @@ public without sharing class CommunityPunchPassesController {
         try {
             return [
                 SELECT Id, Name, TREX1__Contact__c, TREX1__Contact__r.Name, TREX1__Contact__r.FirstName, 
-                       TREX1__memb_Type__c, TREX1__memb_Type__r.Name, TREX1__Type__c, TREX1__Category_Name__c, 
+                       TREX1__memb_Type__c, TREX1__memb_Type__r.Name, TREX1__Type__c,  
                        TREX1__memb_Type__r.TREX1__Location__c, TREX1__memb_Type__r.Appointment_Length__c, 
-                       TREX1__memb_Type__r.Cancellation_Hours_Notice_Required__c, TREX1__memb_Category__c, 
+                       TREX1__memb_Category__c, TREX1__Category_Name__c, 
                        TREX1__memb_Category__r.Minimum_Days_Between_Appointments__c, 
                        TREX1__memb_Category__r.Maximum_Monthly_Appointments__c, 
                        TREX1__memb_Category__r.Cancellation_Hours_Notice_Required__c, 
@@ -103,6 +104,7 @@ public without sharing class CommunityPunchPassesController {
         ];
     }
 
+
     /**********************************
      * Query for assigned staff with upcoming availability and appointments
      * @param String membership type id
@@ -136,6 +138,7 @@ public without sharing class CommunityPunchPassesController {
         ];
         return lstStaff;
     }
+
 
     /**********************************
      * Query for pass decrements related to a given membership id
@@ -174,6 +177,7 @@ public without sharing class CommunityPunchPassesController {
         return lstResults;
     }
 
+
     /**********************************
      * Query for appointments related to a given membership id
      *   Returned as strings to pre-format results
@@ -189,7 +193,8 @@ public without sharing class CommunityPunchPassesController {
             SELECT Id, Name, Start_DateTime__c, End_DateTime__c, 
                    Status__c, Attended__c, Staff__c, Staff__r.Name, 
                    Cancellation_Date__c, Membership_Category__c,  
-                   Membership_Category__r.Minimum_Days_Between_Appointments__c
+                   Membership_Category__r.Minimum_Days_Between_Appointments__c, 
+                   Membership_Category__r.Cancellation_Hours_Notice_Required__c
               FROM Appointment__c
              WHERE Membership__c = :membership.Id
                AND Status__c != 'Draft'
@@ -197,6 +202,7 @@ public without sharing class CommunityPunchPassesController {
              LIMIT 10000
         ];
     }
+
 
     /**********************************
      * Query for receipt attachment id for a given transaction id
@@ -220,6 +226,7 @@ public without sharing class CommunityPunchPassesController {
         return receipt.Id;
     }
 
+
     /**********************************
      * Query for all contacts in the household with active punch pass memberships
      *   Originally constructed dynamically to prevent exceptions if no target url field is defined
@@ -239,12 +246,12 @@ public without sharing class CommunityPunchPassesController {
             strMembershipCategoryNames
         );
         String strQuery = 'SELECT Id, FirstName, LastName, ';
-        strQuery += '(SELECT Id, Name, TREX1__Contact__c, TREX1__Contact__r.Name, TREX1__Contact__r.FirstName, TREX1__memb_Type__c, TREX1__memb_Type__r.Name, TREX1__Type__c, TREX1__memb_Type__r.TREX1__Location__c, TREX1__memb_Type__r.Cancellation_Hours_Notice_Required__c, TREX1__memb_Type__r.Appointment_Length__c, TREX1__Category_Name__c, TREX1__memb_Category__r.Minimum_Days_Between_Appointments__c, TREX1__memb_Category__r.Appointment_Time_Slot_Interval__c, TREX1__Status__c, TREX1__Account__r.Name, TREX1__Start_Date__c, TREX1__End_Date__c, TREX1__Purchasing_Transaction__c, TREX1__Remaining_Value__c, TREX1__Stored_Value__c, TREX1__Total_Value__c, Effectively_Used_Credits__c, Bookable_Credits__c, CreatedDate';
+        strQuery += '(SELECT Id, Name, TREX1__Contact__c, TREX1__Contact__r.Name, TREX1__Contact__r.FirstName, TREX1__memb_Type__c, TREX1__memb_Type__r.Name, TREX1__Type__c, TREX1__memb_Type__r.TREX1__Location__c, TREX1__memb_Type__r.Appointment_Length__c, TREX1__Category_Name__c, TREX1__memb_Category__r.Minimum_Days_Between_Appointments__c, TREX1__memb_Category__r.Appointment_Time_Slot_Interval__c, TREX1__memb_Category__r.Cancellation_Hours_Notice_Required__c, TREX1__Status__c, TREX1__Account__r.Name, TREX1__Start_Date__c, TREX1__End_Date__c, TREX1__Purchasing_Transaction__c, TREX1__Remaining_Value__c, TREX1__Stored_Value__c, TREX1__Total_Value__c, Effectively_Used_Credits__c, Bookable_Credits__c, CreatedDate';
         strQuery += ' FROM TREX1__Memberships__r WHERE RecordType.DeveloperName = :PUNCH_PASS_RECORDTYPE_NAME' + 
             ' AND TREX1__Category_Name__c IN :lstMembershipCategoryNames' + 
             ' AND TREX1__Remaining_Value__c > 0 AND TREX1__Status__c != :MEMBERSHIP_STATUS_COMPLETE' + 
             ' AND (TREX1__End_Date__c >= TODAY OR TREX1__End_Date__c = NULL) ORDER BY TREX1__End_Date__c ASC NULLS LAST)' + 
-            ' FROM Contact WHERE AccountId = :accountId' + 
+            ' FROM Contact WHERE (AccountId = :accountId OR TREX1__Secondary_Account__c = :accountId)' + 
             ' AND Id IN (SELECT TREX1__Contact__c FROM TREX1__Membership__c WHERE RecordType.DeveloperName = :PUNCH_PASS_RECORDTYPE_NAME' + 
             ' AND TREX1__Category_Name__c IN :lstMembershipCategoryNames' + 
             ' AND TREX1__Remaining_Value__c > 0 AND TREX1__Status__c != :MEMBERSHIP_STATUS_COMPLETE)' + 
@@ -254,6 +261,7 @@ public without sharing class CommunityPunchPassesController {
         return lstContacts;
 
     }
+
 
     /**********************************
      * Query for all contacts in the household with completed punch pass memberships
@@ -288,7 +296,7 @@ public without sharing class CommunityPunchPassesController {
                         OR TREX1__Status__c = :MEMBERSHIP_STATUS_COMPLETE)
                      ORDER BY TREX1__End_Date__c ASC NULLS LAST)
               FROM Contact
-             WHERE AccountId = :accountId
+             WHERE (AccountId = :accountId OR TREX1__Secondary_Account__c = :accountId)
                AND Id IN (SELECT TREX1__Contact__c
                             FROM TREX1__Membership__c
                            WHERE RecordType.DeveloperName = :PUNCH_PASS_RECORDTYPE_NAME
@@ -299,6 +307,41 @@ public without sharing class CommunityPunchPassesController {
              ORDER BY FirstName ASC
              LIMIT 10000
         ];
+    }
+
+
+    /**********************************
+     * Create appointment with all properties already set
+     *   Moved away from Lightning Data Service in order to perform dml 
+     *   without sharing enforced
+     * @param sObject Appointment to be created
+     * @return sObject Inserted appointment
+     ***********************************/
+
+    @AuraEnabled(cacheable=false)
+    public static sObject createRecord(sObject record) {
+        try {
+            insert record;
+            return record;
+        } catch (Exception e) {
+            throw new AuraHandledException(e.getMessage());
+        }
+    }
+
+
+    /**********************************
+     * Update sObject with all properties already set
+     * @param sObject Appointment to be updated
+     * @return void
+     ***********************************/
+
+    @AuraEnabled(cacheable=false)
+    public static void updateRecord(sObject record) {
+        try {
+            update record;
+        } catch (Exception e) {
+            throw new AuraHandledException(e.getMessage());
+        }
     }
 
 }
